@@ -8,6 +8,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "timers.h"
 
 #include "board.h"
 
@@ -23,15 +24,19 @@
 #include "device_nvm.h"
 
 /* Private Defines ------------------------------------------*/
+// 1000 ms
+#define LED_CHANGE_TIMER_PERIOD pdMS_TO_TICKS( 1000 )
+#define LED_TARGET_ALL (LEDS_RED|LEDS_GREEN|LEDS_BLUE)
 // clang-format off
 // clang-format on
 
 /* Type Definitions -----------------------------------------*/
 
 /* Function Declarations ------------------------------------*/
-
+static void prvLEDTimerTestCallback( TimerHandle_t xExpiredTimer );
 /* Private Variables ----------------------------------------*/
-
+static TimerHandle_t xLEDTimer;
+static eLEDs_t xLEDState = ~(LEDS_ALL);
 /*-----------------------------------------------------------*/
 
 void vApplicationSetLogLevels( void )
@@ -51,7 +56,6 @@ void vApplicationStartupCallback( void )
 	UNUSED(pcRebootCount);
 	UNUSED(ulRebootCount);
 
-	vLedsOn( LEDS_ALL );
 
 	/* Get Reboot reason */
 	pxRebootData = xWatchdogRebootReason();
@@ -59,7 +63,35 @@ void vApplicationStartupCallback( void )
 		vWatchdogPrintRebootReason( LOG_APPLICATION, LOG_INFO, pxRebootData );
 	}
 
-	vLedsOff( LEDS_ALL );
+    xLEDState = LEDS_RED;
+    vLedsOff(LED_TARGET_ALL);
+    vLedsOn(xLEDState);
+
+    xLEDTimer = xTimerCreate( "LED change timer", LED_CHANGE_TIMER_PERIOD, pdTRUE, NULL, prvLEDTimerTestCallback );
+    configASSERT( xLEDTimer );
+
+    xTimerStart( xLEDTimer, portMAX_DELAY );
 }
 
 /*-----------------------------------------------------------*/
+static void prvLEDTimerTestCallback( TimerHandle_t xExpiredTimer )
+{
+    /* Remove compiler warnings about unused parameters. */
+    ( void ) xExpiredTimer;
+
+    vLedsOff(LED_TARGET_ALL);
+    switch(xLEDState){
+        case LEDS_RED:
+            xLEDState = LEDS_GREEN;
+            break;
+        case LEDS_GREEN:
+            xLEDState = LEDS_BLUE;
+            break;
+        case LEDS_BLUE:
+            xLEDState = LEDS_RED;
+            break;
+        default:
+            break;
+    }
+    vLedsSet(xLEDState);
+}
