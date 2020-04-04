@@ -20,7 +20,6 @@ EI_ROOT_PATH=${PROJ_REPO_ROOT}/ei-freertos
 cd ${PROJ_REPO_ROOT}
 rm -f ./common/proj_common.mk
 touch ./common/proj_common.mk
-echo "EI_ROOT_PATH=${PROJ_REPO_ROOT}/ei-freertos" >> ./common/proj_common.mk
 
 # Arm eabi check
 if [ -d ${TOOLCHAIN_PATH} ]; then
@@ -58,6 +57,7 @@ if [ ${PATH} == ${PATH/${EI_ROOT_PATH}\/tools/} ]; then
 fi
 
 # Print command into proj_common.mk
-echo "PATH=${PROJ_PATH}:${PATH}" >> ./common/proj_common.mk
-echo "PYTHONPATH=${PROJ_PYTHONPATH}${PYTHONPATH:+\:${PYTHONPATH}}" >> ./common/proj_common.mk
-echo "REPO_PATH=${EI_ROOT_PATH}" >> ./common/proj_common.mk
+echo "export PATH := ${PROJ_PATH}:${PATH}" >> ./common/proj_common.mk
+echo "export PYTHONPATH := ${PROJ_PYTHONPATH}${PYTHONPATH:+\:${PYTHONPATH}}" >> ./common/proj_common.mk
+echo "export REPO_ROOT := ${EI_ROOT_PATH}" >> ./common/proj_common.mk
+echo "export APP_ROOT := \$(shell  pwd)" >> ./common/proj_common.mk
