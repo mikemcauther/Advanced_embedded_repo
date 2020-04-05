@@ -95,7 +95,7 @@ Ensure the tick rate is a multiple of the clock. */
 #define configUSE_COUNTING_SEMAPHORES			( 1 )
 #define configUSE_ALTERNATIVE_API				( 0 )/* Deprecated! */
 #define configQUEUE_REGISTRY_SIZE				( 10 )
-#define configUSE_QUEUE_SETS					( 0 )
+#define configUSE_QUEUE_SETS					( 1 )
 
 /* Run time stats gathering related definitions. */
 #define configGENERATE_RUN_TIME_STATS			( 0 )

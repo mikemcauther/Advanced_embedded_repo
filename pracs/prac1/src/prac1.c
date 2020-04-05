@@ -13,7 +13,6 @@
 #include "board.h"
 
 #include "gpio.h"
-#include "leds.h"
 #include "log.h"
 #include "rtc.h"
 #include "watchdog.h"
@@ -24,21 +23,17 @@
 #include "device_nvm.h"
 
 #include "s4527438_lib_cli.h"
+#include "s4527438_os_led.h"
+#include "s4527438_cli_led.h"
 
 /* Private Defines ------------------------------------------*/
-// 1000 ms
-#define LED_CHANGE_TIMER_PERIOD pdMS_TO_TICKS( 1000 )
-#define LED_TARGET_ALL (LEDS_RED|LEDS_GREEN|LEDS_BLUE)
 // clang-format off
 // clang-format on
 
 /* Type Definitions -----------------------------------------*/
 
 /* Function Declarations ------------------------------------*/
-static void prvLEDTimerTestCallback( TimerHandle_t xExpiredTimer );
 /* Private Variables ----------------------------------------*/
-static TimerHandle_t xLEDTimer;
-static eLEDs_t xLEDState = ~(LEDS_ALL);
 
 /*-----------------------------------------------------------*/
 
@@ -66,39 +61,11 @@ void vApplicationStartupCallback( void )
 		vWatchdogPrintRebootReason( LOG_APPLICATION, LOG_INFO, pxRebootData );
 	}
 
-    /* Set up LED: R-> G -> B */
-    xLEDState = LEDS_RED;
-    vLedsOff(LED_TARGET_ALL);
-    vLedsOn(xLEDState);
-
-    xLEDTimer = xTimerCreate( "LED change timer", LED_CHANGE_TIMER_PERIOD, pdTRUE, NULL, prvLEDTimerTestCallback );
-    configASSERT( xLEDTimer );
-
-    xTimerStart( xLEDTimer, portMAX_DELAY );
-
+    s4527438_os_led_init();
     s4527438_lib_cli_init();
+
+    s4527438_cli_led_init();
 }
 
 /*-----------------------------------------------------------*/
-static void prvLEDTimerTestCallback( TimerHandle_t xExpiredTimer )
-{
-    /* Remove compiler warnings about unused parameters. */
-    ( void ) xExpiredTimer;
-
-    vLedsOff(LED_TARGET_ALL);
-    switch(xLEDState){
-        case LEDS_RED:
-            xLEDState = LEDS_GREEN;
-            break;
-        case LEDS_GREEN:
-            xLEDState = LEDS_BLUE;
-            break;
-        case LEDS_BLUE:
-            xLEDState = LEDS_RED;
-            break;
-        default:
-            break;
-    }
-    vLedsSet(xLEDState);
-}
 
