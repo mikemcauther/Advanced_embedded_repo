@@ -1,9 +1,9 @@
 /** 
  **************************************************************
- * @file mylib/s4527438_os_radio.h
+ * @file mylib/s4527438_os_led.h
  * @author KO-CHEN CHI - s4527438
  * @date 26032019
- * @brief mylib radio driver
+ * @brief mylib led driver
  * REFERENCE: 
  ***************************************************************
  * EXTERNAL FUNCTIONS 
@@ -11,8 +11,8 @@
  *************************************************************** 
  */
 
-#ifndef S4527438_OS_ATIMER_H_
-#define S4527438_OS_ATIMER_H_
+#ifndef S4527438_OS_LED_H_
+#define S4527438_OS_LED_H_
 
 typedef enum{
     MY_OS_LIB_LED_CMD_ON,
@@ -31,4 +31,4 @@ typedef enum{
 
 void s4527438_os_led_init(void);
 void s4527438_os_led_command(LED_Cmd_Enum led_cmd,LED_Color_Enum led_color);
-#endif /* S4527438_OS_RADIO_H_ */
+#endif /* S4527438_OS_LED_H_ */

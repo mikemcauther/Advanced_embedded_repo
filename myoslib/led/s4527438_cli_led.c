@@ -22,13 +22,13 @@
 #include "FreeRTOS_CLI.h"
 
 #include "s4527438_os_led.h"
+#include "s4527438_lib_log.h"
 /* Private typedef -----------------------------------------------------------*/
 
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-static BaseType_t prvAtimerGetSysCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString );
 static BaseType_t prvLEDGetSysCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString );
 
 CLI_Command_Definition_t xLEDGetSys = {  /* Structure that defines the "pan" command line command. */
@@ -71,7 +71,8 @@ static BaseType_t prvLEDGetSysCommand(char *pcWriteBuffer, size_t xWriteBufferLe
                 led_cmd = MY_OS_LIB_LED_CMD_TOGGLE;
                 break;
             default:
-                break;
+                s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"Error for led cmd: Wrong cmd!!");
+                return returnedValue;
         }
     } else {
         return returnedValue;
@@ -93,7 +94,8 @@ static BaseType_t prvLEDGetSysCommand(char *pcWriteBuffer, size_t xWriteBufferLe
                 led_color = MY_OS_LIB_LED_COLOR_BLUE;
                 break;
             default:
-                break;
+                s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"Error for led cmd: Wrong color!!");
+                return returnedValue;
         }
     } else {
         return returnedValue;

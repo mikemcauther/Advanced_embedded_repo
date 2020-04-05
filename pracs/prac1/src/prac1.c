@@ -7,24 +7,22 @@
 /* Includes -------------------------------------------------*/
 
 #include "FreeRTOS.h"
-#include "task.h"
-#include "timers.h"
-
 #include "board.h"
 
-#include "gpio.h"
 #include "log.h"
-#include "rtc.h"
 #include "watchdog.h"
 
 #include "test_reporting.h"
-#include "tiny_printf.h"
-
-#include "device_nvm.h"
 
 #include "s4527438_lib_cli.h"
+#include "s4527438_lib_log.h"
+
 #include "s4527438_os_led.h"
+#include "s4527438_os_log.h"
+
+// cli related header
 #include "s4527438_cli_led.h"
+#include "s4527438_cli_log.h"
 
 /* Private Defines ------------------------------------------*/
 // clang-format off
@@ -54,7 +52,6 @@ void vApplicationStartupCallback( void )
 	UNUSED(pcRebootCount);
 	UNUSED(ulRebootCount);
 
-
 	/* Get Reboot reason */
 	pxRebootData = xWatchdogRebootReason();
 	if ( pxRebootData != NULL ) {
@@ -62,9 +59,13 @@ void vApplicationStartupCallback( void )
 	}
 
     s4527438_os_led_init();
+    s4527438_os_log_init();
+
     s4527438_lib_cli_init();
+    s4527438_lib_log_init();
 
     s4527438_cli_led_init();
+    s4527438_cli_log_init();
 }
 
 /*-----------------------------------------------------------*/
