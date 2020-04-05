@@ -44,4 +44,9 @@ CMSIS_DIR			:= $(CORE_EXTERNAL_DIR)/CMSIS_5/CMSIS
 CMSIS_CORE_DIR		:= $(CMSIS_DIR)/Core
 CMSIS_DSP_DIR		:= $(CMSIS_DIR)/DSP
 
+# My OS LIB Directories
+MY_OS_LIB_CLI_DIR   := $(MY_OS_LIB_ROOT)/cli
+MY_OS_LIB_TIMER_DIR := $(MY_OS_LIB_ROOT)/timer
+MY_OS_LIB_LOG_DIR   := $(MY_OS_LIB_ROOT)/log
+MY_OS_LIB_LED_DIR   := $(MY_OS_LIB_ROOT)/led
 ##############################################################################

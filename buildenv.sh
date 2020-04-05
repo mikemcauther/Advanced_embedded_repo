@@ -3,6 +3,7 @@
 set +x
 
 PROJ_REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+PROJ_MY_OS_LIB_ROOT=${PROJ_REPO_ROOT}/myoslib
 
 TOOLCHAIN_PATH=/home/csse3010/projects/csse4011/tools
 TOOLCHAIN_DOWNLOAD_URL="https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads"
@@ -61,3 +62,4 @@ echo "export PATH := ${PROJ_PATH}:${PATH}" >> ./common/proj_common.mk
 echo "export PYTHONPATH := ${PROJ_PYTHONPATH}${PYTHONPATH:+\:${PYTHONPATH}}" >> ./common/proj_common.mk
 echo "export REPO_ROOT := ${EI_ROOT_PATH}" >> ./common/proj_common.mk
 echo "export APP_ROOT := \$(shell  pwd)" >> ./common/proj_common.mk
+echo "export MY_OS_LIB_ROOT := ${PROJ_MY_OS_LIB_ROOT}" >> ./common/proj_common.mk

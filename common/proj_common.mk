@@ -2,3 +2,4 @@ export PATH := /home/csse3010/projects/csse4011-s4527438/ei-freertos/tools:/home
 export PYTHONPATH := /home/csse3010/projects/csse4011-s4527438/ei-freertos/pyclasses
 export REPO_ROOT := /home/csse3010/projects/csse4011-s4527438/ei-freertos
 export APP_ROOT := $(shell  pwd)
+export MY_OS_LIB_ROOT := /home/csse3010/projects/csse4011-s4527438/myoslib

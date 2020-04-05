@@ -36,6 +36,7 @@ APPLICATION_SRCS 	+= $(wildcard $(CSIRO_ARCH_DIR)/cpu/$(CPU_VARIANT)/src/*)
 # Source files which are automatically generated
 GENERATED_SRCS      += $(CORE_CSIRO_DIR)/platform/common/src/build_info.c
 
+
 ##############################################################################
 # Core CSIRO Files
 ##############################################################################
@@ -84,6 +85,22 @@ CORE_CSIRO_INCS		+= $(CORE_CSIRO_DIR)/batteries/inc
 
 CORE_CSIRO_INCS 	+= $(CORE_CSIRO_DIR)/platform/common/inc
 CORE_CSIRO_INCS		+= $(wildcard $(CORE_CSIRO_DIR)/arch/common/*/inc)
+
+##############################################################################
+# My OS LIB Libraries
+##############################################################################
+
+PLATFORM_LIBS               += MY_OS_LIB_CLI
+
+MY_OS_LIB_CLI_SRCS          := $(wildcard $(MY_OS_LIB_CLI_DIR)/*.c)
+MY_OS_LIB_TIMER_SRCS        += $(wildcard $(MY_OS_LIB_TIMER_DIR)/*.c)
+MY_OS_LIB_LOG_SRCS          += $(wildcard $(MY_OS_LIB_LOG_DIR)/*.c)
+MY_OS_LIB_LED_SRCS          += $(wildcard $(MY_OS_LIB_LED_DIR)/*.c)
+
+MY_OS_LIB_CLI_SYS_INCS      := $(MY_OS_LIB_CLI_DIR)
+MY_OS_LIB_TIMER_SYS_INCS    += $(MY_OS_LIB_TIMER_DIR)
+MY_OS_LIB_LOG_SYS_INCS      += $(MY_OS_LIB_LOG_DIR)
+MY_OS_LIB_LED_SYS_INCS      += $(MY_OS_LIB_LED_DIR)
 
 ##############################################################################
 # Common Architecture Specific Libraries

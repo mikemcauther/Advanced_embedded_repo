@@ -22,7 +22,8 @@
 #include "tiny_printf.h"
 
 #include "device_nvm.h"
-#include "unified_comms_serial.h"
+
+#include "s4527438_lib_cli.h"
 
 /* Private Defines ------------------------------------------*/
 // 1000 ms
@@ -39,9 +40,6 @@ static void prvLEDTimerTestCallback( TimerHandle_t xExpiredTimer );
 static TimerHandle_t xLEDTimer;
 static eLEDs_t xLEDState = ~(LEDS_ALL);
 
-void vCustomSerialHandler(xCommsInterface_t *pxComms,
-                          xUnifiedCommsIncomingRoute_t *pxCurrentRoute,
-                          xUnifiedCommsMessage_t *pxMessage);
 /*-----------------------------------------------------------*/
 
 void vApplicationSetLogLevels( void )
@@ -78,10 +76,7 @@ void vApplicationStartupCallback( void )
 
     xTimerStart( xLEDTimer, portMAX_DELAY );
 
-    /* Set up Serial input listen */
-    /* Setup our serial receive handler */
-    xSerialComms.fnReceiveHandler = vCustomSerialHandler;
-    vUnifiedCommsListen(&xSerialComms, COMMS_LISTEN_ON_FOREVER);
+    s4527438_lib_cli_init();
 }
 
 /*-----------------------------------------------------------*/
@@ -105,24 +100,5 @@ static void prvLEDTimerTestCallback( TimerHandle_t xExpiredTimer )
             break;
     }
     vLedsSet(xLEDState);
-}
-
-void vCustomSerialHandler(xCommsInterface_t *pxComms,
-                          xUnifiedCommsIncomingRoute_t *pxCurrentRoute,
-                          xUnifiedCommsMessage_t *pxMessage)
-{
-    char pcLocalString[60] = {0};
-    UNUSED(pxCurrentRoute);
-    UNUSED(pxComms);
-    /*
-     * Copy the string to a local buffer so it can be NULL terminated properly
-     * The %s format specifier does not respect provided lengths
-     */
-    pvMemcpy(pcLocalString, pxMessage->pucPayload, pxMessage->usPayloadLen);
-
-    eLog(LOG_APPLICATION, LOG_INFO, "\r\nReceived PKT:\r\n");
-    eLog(LOG_APPLICATION, LOG_INFO, "\t  Type: %02X\r\n", pxMessage->xPayloadType);
-    eLog(LOG_APPLICATION, LOG_INFO, "\tString: %s\r\n\r\n", pcLocalString);
-
 }
 
