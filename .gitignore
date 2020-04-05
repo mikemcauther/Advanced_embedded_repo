@@ -5,3 +5,7 @@ cscope.out
 cscope.po.out
 linux_csct
 tags
+**/*.swp
+**/.*
+*.swp
+*.xml
