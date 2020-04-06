@@ -178,7 +178,10 @@ size_t xCommandStringLength;
 						if( prvGetNumberOfParameters( pcCommandInput ) != pxCommand->pxCommandLineDefinition->cExpectedNumberOfParameters )
 						{
 							xReturn = pdFALSE;
-						}
+                            continue;
+						} else {
+							xReturn = pdTRUE;
+                        }
 					}
 
 					break;
