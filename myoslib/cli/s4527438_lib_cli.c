@@ -60,10 +60,6 @@ void vCustomSerialHandler(xCommsInterface_t *pxComms,
      */
     pvMemcpy(pcLocalString, pxMessage->pucPayload, pxMessage->usPayloadLen);
 
-    eLog(LOG_APPLICATION, LOG_INFO, "\r\nReceived PKT:\r\n");
-    eLog(LOG_APPLICATION, LOG_INFO, "\t  Type: %02X\r\n", pxMessage->xPayloadType);
-    eLog(LOG_APPLICATION, LOG_INFO, "\tString: %s\r\n\r\n", pcLocalString);
-
     cli_processor(pcLocalString,sizeof(pcLocalString));
 }
 
@@ -83,7 +79,6 @@ static void cli_processor(char *cInputString,size_t cInputStringLen)
 
         /* Display CLI command output string (not thread safe) */
         if(strlen(pcOutputString) > 0 ) {
-            eLog(LOG_APPLICATION, LOG_INFO, "\tCommand Result String: %s\r\n\r\n", pcOutputString);
             memset(pcOutputString,0x00,strlen(pcOutputString));
         }
      //vTaskDelay(5);  //Must delay between debug_printfs.

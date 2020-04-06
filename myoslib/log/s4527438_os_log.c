@@ -50,6 +50,8 @@ struct MyOsLibLogMessage {    /* Message consists of sequence number and payload
 
 #define QUEUE_LENGTH                        50
 
+#define LOG_COMMON_HEADER  "\r\n"
+
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -57,6 +59,13 @@ struct MyOsLibLogMessage {    /* Message consists of sequence number and payload
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
+
+#define LOG_LEVEL_ERROR_HEADER  "[ERROR]"
+#define LOG_LEVEL_LOG_HEADER    "[LOG]  "
+#define LOG_LEVEL_DEBUG_HEADER  "[DEBUG]"
+
+#define LOG_COMMON_END      "\r\n"
+
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static TaskHandle_t xTaskLogOsHandle;
@@ -133,28 +142,39 @@ static void LogTask( void ) {
                     pcString = pxSerialOutput->pxImplementation->fnClaimBuffer( pxSerialOutput->pvContext, &ulMaxLen );
 
                     // Check Buffer size
-                    if( ulMaxLen < (strlen(ANSI_COLOR_RED) + strlen(ANSI_COLOR_RESET) + RecvMessage.used_buffer_size)  ) {
+                    if( ulMaxLen < (strlen(LOG_COMMON_HEADER) + strlen(ANSI_COLOR_RED) + strlen(LOG_LEVEL_ERROR_HEADER) + strlen(ANSI_COLOR_RESET) + RecvMessage.used_buffer_size + strlen(LOG_COMMON_END))  ) {
                         pxSerialOutput->pxImplementation->fnReleaseBuffer( pxSerialOutput->pvContext, pcString );
                         break; 
                     }
 
                     char *bufferPtr = pcString;
+
+                    memcpy(bufferPtr,LOG_COMMON_HEADER,strlen(LOG_COMMON_HEADER));
+                    bufferPtr += strlen(LOG_COMMON_HEADER);
+
                     switch( RecvMessage.log_level ){
                         case MY_OS_LIB_LOG_LEVEL_ERROR:
 
                             memcpy(bufferPtr,ANSI_COLOR_RED,strlen(ANSI_COLOR_RED));
                             bufferPtr += strlen(ANSI_COLOR_RED);
 
+                            memcpy(bufferPtr,LOG_LEVEL_ERROR_HEADER,strlen(LOG_LEVEL_ERROR_HEADER));
+                            bufferPtr += strlen(LOG_LEVEL_ERROR_HEADER);
                             break;
                         case MY_OS_LIB_LOG_LEVEL_LOG:
 
                             memcpy(bufferPtr,ANSI_COLOR_GREEN,strlen(ANSI_COLOR_GREEN));
                             bufferPtr += strlen(ANSI_COLOR_GREEN);
 
+                            memcpy(bufferPtr,LOG_LEVEL_LOG_HEADER,strlen(LOG_LEVEL_LOG_HEADER));
+                            bufferPtr += strlen(LOG_LEVEL_LOG_HEADER);
                             break;
                         case MY_OS_LIB_LOG_LEVEL_DEBUG:
                             memcpy(bufferPtr,ANSI_COLOR_BLUE,strlen(ANSI_COLOR_BLUE));
                             bufferPtr += strlen(ANSI_COLOR_BLUE);
+
+                            memcpy(bufferPtr,LOG_LEVEL_DEBUG_HEADER,strlen(LOG_LEVEL_DEBUG_HEADER));
+                            bufferPtr += strlen(LOG_LEVEL_DEBUG_HEADER);
                             break;
                         default:
                             break;
@@ -164,6 +184,10 @@ static void LogTask( void ) {
 
                     memcpy(bufferPtr,ANSI_COLOR_RESET,strlen(ANSI_COLOR_BLUE));
                     bufferPtr += strlen(ANSI_COLOR_RESET);
+
+                    memcpy(bufferPtr,LOG_COMMON_END,strlen(LOG_COMMON_END));
+                    bufferPtr += strlen(LOG_COMMON_END);
+
                     *(bufferPtr++) = '\0';
 
                     pxSerialOutput->pxImplementation->fnSendBuffer( pxSerialOutput->pvContext, pcString, (bufferPtr - pcString) );
