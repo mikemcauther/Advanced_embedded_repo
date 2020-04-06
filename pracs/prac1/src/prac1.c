@@ -23,6 +23,7 @@
 // cli related header
 #include "s4527438_cli_led.h"
 #include "s4527438_cli_log.h"
+#include "s4527438_cli_timer.h"
 
 /* Private Defines ------------------------------------------*/
 // clang-format off
@@ -66,6 +67,7 @@ void vApplicationStartupCallback( void )
 
     s4527438_cli_led_init();
     s4527438_cli_log_init();
+    s4527438_cli_time_init();
 }
 
 /*-----------------------------------------------------------*/
