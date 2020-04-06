@@ -23,6 +23,7 @@
 
 #include "s4527438_os_led.h"
 #include "s4527438_lib_log.h"
+#include "log.h"
 /* Private typedef -----------------------------------------------------------*/
 
 /* Private define ------------------------------------------------------------*/
@@ -79,8 +80,8 @@ static BaseType_t prvLEDGetSysCommand(char *pcWriteBuffer, size_t xWriteBufferLe
     }
 
     /* Get parameters 2 from command string */
-    cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
 
+    cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
     if( cCmd_string != NULL ) {
         switch(cCmd_string[0])
         {

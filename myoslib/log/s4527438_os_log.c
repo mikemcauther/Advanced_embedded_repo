@@ -48,7 +48,7 @@ struct MyOsLibLogMessage {    /* Message consists of sequence number and payload
 
 #define QUEUE_BLOCK_TIME_AS_FSM_PERIOD_TICK 100
 
-#define EVENT_NUM                           10
+#define QUEUE_LENGTH                        50
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
@@ -71,8 +71,8 @@ static void LogTask( void );
 
 void s4527438_os_log_init(void) {
 
-    s4527438QueueLogPacketSend = xSemaphoreCreateBinary();
-    xQueueSet = xQueueCreateSet(EVENT_NUM);
+    s4527438QueueLogPacketSend = xQueueCreate(QUEUE_LENGTH, sizeof(struct MyOsLibLogMessage));
+    xQueueSet = xQueueCreateSet(QUEUE_LENGTH);
     xQueueAddToSet(s4527438QueueLogPacketSend, xQueueSet);
 
     currnetLogLevel = MY_OS_LIB_LOG_LEVEL_ERROR;  

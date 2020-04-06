@@ -39,7 +39,7 @@ struct MyOsLibLEDMessage {    /* Message consists of sequence number and payload
 
 #define QUEUE_BLOCK_TIME_AS_FSM_PERIOD_TICK 100
 
-#define EVENT_NUM                           10
+#define QUEUE_LENGTH                        50
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -57,8 +57,8 @@ static void prvLEDTimerCallback( TimerHandle_t xExpiredTimer );
 
 void s4527438_os_led_init(void) {
 
-    s4527438QueueLEDPacketSend = xSemaphoreCreateBinary();
-    xQueueSet = xQueueCreateSet(EVENT_NUM);
+    s4527438QueueLEDPacketSend = xQueueCreate(QUEUE_LENGTH, sizeof(struct MyOsLibLEDMessage));
+    xQueueSet = xQueueCreateSet(QUEUE_LENGTH);
     xQueueAddToSet(s4527438QueueLEDPacketSend, xQueueSet);
 
     /* Set up LED: R-> G -> B */
