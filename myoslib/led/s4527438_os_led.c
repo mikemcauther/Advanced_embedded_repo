@@ -23,6 +23,7 @@
 #include "leds.h"
 
 #include "s4527438_os_led.h"
+#include "s4527438_lib_log.h"
 
 /* Private typedef -----------------------------------------------------------*/
 // 1000 ms
@@ -138,12 +139,15 @@ static void prvLEDTimerCallback( TimerHandle_t xExpiredTimer )
     vLedsOff(LED_TARGET_ALL & (~xMaskLEDs));
     switch(xLEDState){
         case LEDS_RED:
+            s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_DEBUG,"LED color: RED");
             xLEDState = LEDS_GREEN;
             break;
         case LEDS_GREEN:
+            s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_DEBUG,"LED color: GREEN");
             xLEDState = LEDS_BLUE;
             break;
         case LEDS_BLUE:
+            s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_DEBUG,"LED color: BLUE");
             xLEDState = LEDS_RED;
             break;
         default:
