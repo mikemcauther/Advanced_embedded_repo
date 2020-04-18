@@ -68,3 +68,6 @@ rm -f ./env_set.sh
 echo "#!/bin/bash" >> ./env_set.sh
 echo "export PATH=${PROJ_PATH}:${PATH}" >> ./env_set.sh
 echo "export PYTHONPATH=${PROJ_PYTHONPATH}${PYTHONPATH:+\:${PYTHONPATH}}" >> ./env_set.sh
+STLINK_DEVICE_VAR="$(lsusb | grep "ST-LINK" | sed 's/^Bus \([0-9]\{3\}\) Device \([0-9]\{3\}\):.*/\1:\2/')"
+echo "export STLINK_DEVICE=${STLINK_DEVICE_VAR}"  >> ./env_set.sh
+
