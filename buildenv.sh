@@ -5,6 +5,7 @@ set +x
 PROJ_REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 PROJ_MY_OS_LIB_ROOT=${PROJ_REPO_ROOT}/myoslib
 
+MICROPYTHON_REPO_ROOT=/home/csse3010/projects/csse4011/micropython/micropython
 TOOLCHAIN_PATH=/home/csse3010/projects/csse4011/tools
 TOOLCHAIN_DOWNLOAD_URL="https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads"
 
@@ -45,13 +46,13 @@ if ! [ -d ${EI_ROOT_PATH} ]; then
 fi
 
 # Export EI related path
-if [ ${PYTHONPATH} == ${PYTHONPATH/${EI_ROOT_PATH}\/pyclasses/} ]; then
+if [ "${PYTHONPATH}" == "${PYTHONPATH/${EI_ROOT_PATH}\/pyclasses/}" ]; then
     echo ""
     echo "Add PYTHONPATH: ${EI_ROOT_PATH}/pyclasses"
     PROJ_PYTHONPATH=${EI_ROOT_PATH}/pyclasses${PROJ_PYTHONPATH:+\:${PROJ_PYTHONPATH}}
 fi
 
-if [ ${PATH} == ${PATH/${EI_ROOT_PATH}\/tools/} ]; then
+if [ "${PATH}" == "${PATH/${EI_ROOT_PATH}\/tools/}" ]; then
     echo ""
     echo "Add PATH: ${EI_ROOT_PATH}/tools"
     PROJ_PATH=${EI_ROOT_PATH}/tools${PROJ_PATH:+\:${PROJ_PATH}}
@@ -71,3 +72,4 @@ echo "export PYTHONPATH=${PROJ_PYTHONPATH}${PYTHONPATH:+\:${PYTHONPATH}}" >> ./e
 STLINK_DEVICE_VAR="$(lsusb | grep "ST-LINK" | sed 's/^Bus \([0-9]\{3\}\) Device \([0-9]\{3\}\):.*/\1:\2/')"
 echo "export STLINK_DEVICE=${STLINK_DEVICE_VAR}"  >> ./env_set.sh
 
+echo "sudo ln -s ${MICROPYTHON_REPO_ROOT}/tools/pyboard.py /usr/bin/pyboard" >> ./env_set.sh
