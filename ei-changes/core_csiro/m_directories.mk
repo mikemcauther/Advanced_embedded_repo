@@ -49,4 +49,5 @@ MY_OS_LIB_CLI_DIR   := $(MY_OS_LIB_ROOT)/cli
 MY_OS_LIB_TIMER_DIR := $(MY_OS_LIB_ROOT)/timer
 MY_OS_LIB_LOG_DIR   := $(MY_OS_LIB_ROOT)/log
 MY_OS_LIB_LED_DIR   := $(MY_OS_LIB_ROOT)/led
+MY_OS_LIB_HCI_DIR   := $(MY_OS_LIB_ROOT)/hci
 ##############################################################################
