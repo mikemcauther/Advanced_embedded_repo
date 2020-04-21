@@ -21,6 +21,7 @@
 #include "uart.h"
 #include "s4527438_hci_packet.h"
 #include "s4527438_hal_hci.h"
+#include "s4527438_lib_log.h"
 
 typedef struct xHCIInterfaceHeader_t
 {
@@ -103,6 +104,10 @@ void eHCICommsSend( xHCICommsMessage_t *pxMessage )
 
 /*-----------------------------------------------------------*/
 
+void s4527438_hal_hci_init(void) {
+    xHCIComms.fnEnable( true );
+}
+
 void vHCIPacketBuilder( char cByte )
 {
     static xHCIInterfaceHeader_t xHCIHeader        = { 0x00 };
@@ -114,6 +119,7 @@ void vHCIPacketBuilder( char cByte )
     uint16_t usCurrentByte       = usRxByteCount;
     pucRxBuffer[usRxByteCount++] = (uint8_t) cByte;
 
+    s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[HCI Event]: value = [%c]",cByte);
     if ( xHCIComms.fnReceiveHandler == NULL ) {
         return;
     }
@@ -132,9 +138,9 @@ void vHCIPacketBuilder( char cByte )
     /* If the complete packet has arrived */
     else if ( usRxByteCount == ( sizeof( xHCIInterfaceHeader_t ) + HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(xHCIHeader.usType4AndPayloadLen4) ) ) {
         xHCICommsMessage_t xMessage = {
-            .pucPayload   = pucRxBuffer + sizeof( xHCIInterfaceHeader_t ),
             .usPayloadLen = HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(xHCIHeader.usType4AndPayloadLen4)
         };
+        pvMemcpy( xMessage.pucPayload, pucRxBuffer + sizeof( xHCIInterfaceHeader_t ), xMessage.usPayloadLen );
         xHCIComms.fnReceiveHandler( &xHCIComms, &xMessage );
         usRxByteCount        = 0;
     }
