@@ -87,8 +87,7 @@ void eHCICommsSend( xHCICommsMessage_t *pxMessage )
     pcBuffer = pxHCIOutput->pxImplementation->fnClaimBuffer( pxHCIOutput->pvContext, &ulBufferLength );
     /* Check the data we want to send fits in our UART buffer */
     if ( ulBufferLength < ulTotalLen ) {
-        pvMemcpy( pcBuffer, (char *) "HCI Buffers not large enough to hold HCI Packet!!\r\n", 60 );
-        pxHCIOutput->pxImplementation->fnSendBuffer( pxHCIOutput->pvContext, pcBuffer, 60 );
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[HCI Event][Send]: [%s]",pcBuffer);
         return;
     }
     xBufferBuilder_t xPacketBuilder;
@@ -96,6 +95,7 @@ void eHCICommsSend( xHCICommsMessage_t *pxMessage )
     /* Pack the data */
     vBufferBuilderPushData( &xPacketBuilder, &xInterfaceHeader, sizeof( xHCIInterfaceHeader_t ) );
     vBufferBuilderPushData( &xPacketBuilder, pxMessage->pucPayload, pxMessage->usPayloadLen );
+    s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[HCI Event][Send]: [%x]",pcBuffer);
     /* Push the message at the UART driver */
     pxHCIOutput->pxImplementation->fnSendBuffer( pxHCIOutput->pvContext, pcBuffer, xPacketBuilder.ulIndex );
     /* Increment the sequnce number for next message */
