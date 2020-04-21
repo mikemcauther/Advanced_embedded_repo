@@ -12,12 +12,13 @@ IFS=$'\n'
 for PER_FILE in ${FILES}
 do
     if [ ${PER_FILE} != "${PER_FILE/modified\:/}" ]; then
-        FILE_PATH="$(echo "${PER_FILE}" | sed  's/modified\:[\\s]*\([^\\s]\)/\1/' )"
+        FILE_PATH="$(echo "${PER_FILE}" | sed  's/^.*modified:[[:blank:]]*\([^\s]\)/\1/' )"
         echo $FILE_PATH
-        if [ -f ${EI_ROOT_PATH}/${FILE_PATH} ]; then
-            if [ ! -f ${EI_CHANGE_PATH}/${FILE_PATH} ]; then
+        if [ -f "${EI_ROOT_PATH}/${FILE_PATH}" ]; then
+            if [ ! -f "${EI_CHANGE_PATH}/${FILE_PATH}" ]; then
                 echo ""
                 echo "Add FILE: ${EI_CHANGE_PATH}/${FILE_PATH}"
+                mkdir -p "$( dirname "${EI_CHANGE_PATH}/${FILE_PATH}" )"
                 cp ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH}
             fi
         fi
