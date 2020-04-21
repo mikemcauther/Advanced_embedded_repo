@@ -13,17 +13,19 @@ IFS=$'\n'
 for PER_FILE in ${FILES}
 do
     FILE_PATH="$( echo "${PER_FILE}" | sed  's/^[[:blank:]]*\.\/\([^\s]\)/\1/' )"
-    echo "${FILE_PATH}"
+    #echo "${FILE_PATH}"
+    echo ""
     if [ -f "${EI_CHANGE_PATH}/${FILE_PATH}" ]; then
         # Check Path exist
-        FILE_DIR_PATH=$(dirname "${FILE_PATH}")
-        if [ ! -d "${FILE_DIR_PATH}" ]; then
-            echo "Add new folder: ${FILE_DIR_PATH}"
-            mkdir -p ${FILE_DIR_PATH}
+        FILE_EI_ROOT_DIR_PATH=$(dirname "${EI_ROOT_PATH}/${FILE_PATH}")
+        FILE_EI_CHANGE_DIR_PATH=$(dirname "${EI_ROOT_PATH}/${FILE_PATH}")
+        if [ ! -d "${FILE_EI_ROOT_DIR_PATH}" ]; then
+            echo "Add new folder: ${FILE_EI_ROOT_DIR_PATH}"
+            mkdir -p ${FILE_EI_ROOT_DIR_PATH}
         fi
-        if [ ! -f "${FILE_PATH}" ]; then
+        if [ ! -f "${EI_CHANGE_PATH}/${FILE_PATH}" ]; then
             echo "Add new file: ${EI_ROOT_PATH}/${FILE_PATH}"
-            cp "${EI_CHANGE_PATH}/${FILE_PATH}" "${EI_ROOT_PATH}/${FILE_PATH}"
+            cp "${EI_CHANGE_PATH}/${FILE_PATH}" "${FILE_EI_ROOT_DIR_PATH}/"
         else
             echo "Overrite FILE: ${EI_ROOT_PATH}/${FILE_PATH}"
             diff "${EI_ROOT_PATH}/${FILE_PATH}" "${EI_CHANGE_PATH}/${FILE_PATH}"
