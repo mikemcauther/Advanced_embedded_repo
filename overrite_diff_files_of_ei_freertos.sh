@@ -18,12 +18,12 @@ do
     if [ -f "${EI_CHANGE_PATH}/${FILE_PATH}" ]; then
         # Check Path exist
         FILE_EI_ROOT_DIR_PATH=$(dirname "${EI_ROOT_PATH}/${FILE_PATH}")
-        FILE_EI_CHANGE_DIR_PATH=$(dirname "${EI_ROOT_PATH}/${FILE_PATH}")
+        FILE_EI_CHANGE_DIR_PATH=$(dirname "${EI_CHANGE_PATH}/${FILE_PATH}")
         if [ ! -d "${FILE_EI_ROOT_DIR_PATH}" ]; then
             echo "Add new folder: ${FILE_EI_ROOT_DIR_PATH}"
             mkdir -p ${FILE_EI_ROOT_DIR_PATH}
         fi
-        if [ ! -f "${EI_CHANGE_PATH}/${FILE_PATH}" ]; then
+        if [ ! -f "${EI_ROOT_PATH}/${FILE_PATH}" ]; then
             echo "Add new file: ${EI_ROOT_PATH}/${FILE_PATH}"
             cp "${EI_CHANGE_PATH}/${FILE_PATH}" "${FILE_EI_ROOT_DIR_PATH}/"
         else
