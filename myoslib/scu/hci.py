@@ -45,7 +45,8 @@ class I2C_SENSOR():
 
         if self._is_write:
             print('[I2C_SENSOR] sid = {}, i2c_address = {}, reg_addr = {}, reg_value = {}'.format(self._sid,self._i2c_address,self._reg_addr,self._reg_value))
-            self._i2c_obj.writeto_mem(self._i2c_address, self._reg_addr, self._reg_value, addrsize=8)
+            self._buf = bytearray([self._reg_value])
+            self._i2c_obj.writeto_mem(self._i2c_address, self._reg_addr, self._buf, addrsize=8)
             self._replay_packet_size = 0
         else:
             if self._i2c_address == self.LSM6DSL_ADDR:
