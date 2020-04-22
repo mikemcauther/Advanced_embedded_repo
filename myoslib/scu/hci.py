@@ -28,7 +28,9 @@ class HCI_UART(UART):
 
 
     def __init__(self):                             
+        #super().__init__(2, 115200)
         super().__init__(4, 115200)
+        self.init(115200, bits=8, parity=None, stop=1)
 
         self.HCI_HEADER = 0xAA
         self.HCI_TYPE_REQUEST = 0x01
