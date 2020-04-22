@@ -117,12 +117,20 @@ static void HCIReadTask( void ) {
         if (xActivatedMember == s4527438QueueHCIReadPacketSend) {  
             /* Receive item */
             xQueueReceive( s4527438QueueHCIReadPacketSend, &pxMessage, 0 );
-            
-            char bufferPtr[pxMessage.usPayloadLen + 1];
-            bufferPtr[pxMessage.usPayloadLen] = 0x00;
-            pvMemcpy( bufferPtr, pxMessage.pucPayload, pxMessage.usPayloadLen );
-            
-            s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[HCI Event]: value = [%s] , size = [%d]",bufferPtr,pxMessage.usPayloadLen);
+
+            if( pxMessage.usPayloadLen == 0 ) {
+                continue;
+            }
+            if( pxMessage.usPayloadLen ==  1) {
+                s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[HCI Event]: value = [%x]",pxMessage.pucPayload[0]);
+                continue;
+            }
+            if( pxMessage.usPayloadLen ==  2) {
+                uint16_t result = 0;
+                result = (( pxMessage.pucPayload[1] << 8) | pxMessage.pucPayload[0]);
+                s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[HCI Event]: value = [%x]",result);
+                continue;
+            }
         }
         /* Delay for 10ms */
         vTaskDelay(10);

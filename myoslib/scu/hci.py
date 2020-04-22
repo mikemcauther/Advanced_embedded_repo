@@ -51,26 +51,50 @@ class I2C_SENSOR():
         else:
             if self._i2c_address == self.LSM6DSL_ADDR:
                 if self._reg_value == ord('x'):
-                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_X_LOW_REG, self._buf,addrsize=8)
+                    self._reg_addr = bytearray([self.LSM6DSL_X_LOW_REG])[0]
+                    #self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_X_LOW_REG, self._buf,addrsize=8)
+                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_x_buf[0] = self._buf[0]
-                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_X_HIGH_REG, self._buf,addrsize=8)
+                    self.self_string()
+
+                    self._reg_addr = bytearray([self.LSM6DSL_X_HIGH_REG])[0]
+                    #self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_X_HIGH_REG, self._buf,addrsize=8)
+                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_x_buf[1] = self._buf[0]
+                    self.self_string()
+
                     self._replay_packet_size = 2
                     return
 
                 if self._reg_value == ord('y'):
-                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_Y_LOW_REG, self._buf,addrsize=8)
+                    self._reg_addr = bytearray([self.LSM6DSL_Y_LOW_REG])[0]
+                    #self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_Y_LOW_REG, self._buf,addrsize=8)
+                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_y_buf[0] = self._buf[0]
-                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_Y_HIGH_REG, self._buf,addrsize=8)
+                    self.self_string()
+
+                    self._reg_addr = bytearray([self.LSM6DSL_Y_HIGH_REG])[0]
+                    #self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_Y_HIGH_REG, self._buf,addrsize=8)
+                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_y_buf[1] = self._buf[0]
+                    self.self_string()
+
                     self._replay_packet_size = 2
                     return
 
                 if self._reg_value == ord('z'):
-                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_Z_LOW_REG, self._buf,addrsize=8)
+                    self._reg_addr = bytearray([self.LSM6DSL_Z_LOW_REG])[0]
+                    #self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_Z_LOW_REG, self._buf,addrsize=8)
+                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_z_buf[0] = self._buf[0]
-                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_Z_HIGH_REG, self._buf,addrsize=8)
+                    self.self_string()
+
+                    self._reg_addr = bytearray([self.LSM6DSL_Z_HIGH_REG])[0]
+                    #self._i2c_obj.readfrom_mem_into(self._i2c_address, self.LSM6DSL_Z_HIGH_REG, self._buf,addrsize=8)
+                    self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_z_buf[1] = self._buf[0]
+                    self.self_string()
+
                     self._replay_packet_size = 2
                     return
 

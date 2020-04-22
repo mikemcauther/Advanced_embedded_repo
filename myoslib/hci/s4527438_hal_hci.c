@@ -95,7 +95,7 @@ void eHCICommsSend( xHCICommsMessage_t *pxMessage )
     /* Pack the data */
     vBufferBuilderPushData( &xPacketBuilder, &xInterfaceHeader, sizeof( xHCIInterfaceHeader_t ) );
     vBufferBuilderPushData( &xPacketBuilder, pxMessage->pucPayload, pxMessage->usPayloadLen );
-    s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[HCI Event][Send]: [%x]",pcBuffer);
+    s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_DEBUG,"[HCI Event][Send]: [%x]",pcBuffer);
     /* Push the message at the UART driver */
     pxHCIOutput->pxImplementation->fnSendBuffer( pxHCIOutput->pvContext, pcBuffer, xPacketBuilder.ulIndex );
     /* Increment the sequnce number for next message */
@@ -119,13 +119,13 @@ void vHCIPacketBuilder( char cByte )
     uint16_t usCurrentByte       = usRxByteCount;
     pucRxBuffer[usRxByteCount++] = (uint8_t) cByte;
 
-    s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[HCI Event]: value = [%c]",cByte);
+    s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[HCI Event]: value = [%x]",cByte);
     if ( xHCIComms.fnReceiveHandler == NULL ) {
         return;
     }
 
     /* If we're looking for SYNC bytes */
-    if ( usRxByteCount <= 1 ) {
+    if ( usRxByteCount == 0 ) {
         /* Check that sync bytes match */
         if ( pucRxBuffer[usCurrentByte] != pucSyncBytes[usCurrentByte] ) {
             usRxByteCount = 0;
@@ -134,6 +134,12 @@ void vHCIPacketBuilder( char cByte )
     /* If the header is complete */
     else if ( usRxByteCount == sizeof( xHCIInterfaceHeader_t ) ) {
         pvMemcpy( &xHCIHeader, pucRxBuffer, sizeof( xHCIInterfaceHeader_t ) );
+        xHCICommsMessage_t xMessage = {
+            .usPayloadLen = HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(xHCIHeader.usType4AndPayloadLen4)
+        };
+        if( xMessage.usPayloadLen == 0 ) {
+            usRxByteCount        = 0;
+        }
     }
     /* If the complete packet has arrived */
     else if ( usRxByteCount == ( sizeof( xHCIInterfaceHeader_t ) + HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(xHCIHeader.usType4AndPayloadLen4) ) ) {
@@ -141,6 +147,9 @@ void vHCIPacketBuilder( char cByte )
             .usPayloadLen = HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(xHCIHeader.usType4AndPayloadLen4)
         };
         pvMemcpy( xMessage.pucPayload, pucRxBuffer + sizeof( xHCIInterfaceHeader_t ), xMessage.usPayloadLen );
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[HCI Event]: sizeof( xHCIInterfaceHeader_t ) = [%d]",sizeof( xHCIInterfaceHeader_t ));
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[HCI Event]: pucRxBuffer = [%x:%x:%x:%x:%x:%x:%x]",pucRxBuffer[0],pucRxBuffer[1],pucRxBuffer[2],pucRxBuffer[3],pucRxBuffer[4],pucRxBuffer[5],pucRxBuffer[6]);
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[HCI Event]: xMessage.pucPayload = [%x:%x:%x:%x:%x:%x:%x]",xMessage.pucPayload[0],xMessage.pucPayload[1],xMessage.pucPayload[2],xMessage.pucPayload[3],xMessage.pucPayload[4],xMessage.pucPayload[5],xMessage.pucPayload[6]);
         xHCIComms.fnReceiveHandler( &xHCIComms, &xMessage );
         usRxByteCount        = 0;
     }

@@ -26,8 +26,8 @@
 #define HCI_PACKET_FIELD_TYPE_REQUEST_WITH_LENGTH(length_8_bits)   ((HCI_PACKET_TYPE_REQUEST & 0x0F) | ((0x0F & length_8_bits) << 4))
 #define HCI_PACKET_FIELD_TYPE_RESPONSE_WITH_LENGTH(length_8_bits)   ((HCI_PACKET_TYPE_RESPONSE & 0x0F) | ((0x0F & length_8_bits) << 4))
 
-#define HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(input_8_bits)   ((0x0F & input_8_bits))
-#define HCI_PACKET_FIELD_TYPE_LEN_GET_TYPE(input_8_bits)   ((0xF0 & input_8_bits)>>4)
+#define HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(input_8_bits)   ((0xF0 & input_8_bits) >> 4)
+#define HCI_PACKET_FIELD_TYPE_LEN_GET_TYPE(input_8_bits)   (0x0F & input_8_bits)
 
 #define HCI_PACKET_DATA_I2C_ADDR_WRITE_HTS221       0xBE
 #define HCI_PACKET_DATA_I2C_ADDR_READ_HTS221       0xBF
