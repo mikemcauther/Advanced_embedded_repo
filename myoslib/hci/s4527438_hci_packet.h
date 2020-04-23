@@ -58,7 +58,7 @@ typedef struct xHCIDataField_t
     uint8_t  ucSID;
     uint8_t  ucI2CAddress;
     uint8_t  ucI2CRegAddr;
-    uint8_t  ucI2CRegValue[15];
+    uint8_t  ucI2CRegValue;
 } ATTR_PACKED xHCIDataField_t;
 
 #endif /* S4527438_HCI_PACKET_H_ */
