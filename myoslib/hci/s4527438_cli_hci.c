@@ -32,7 +32,7 @@
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 static uint8_t convert_2_char_to_1_hex_byte(unsigned char *input_2_char);
-static void string_to_hex(char *input_string,unsigned char input_length,uint8_t *output_buffer,unsigned char output_length);
+static uint8_t string_to_hex(char *input_string,unsigned char input_length,uint8_t *output_buffer,unsigned char output_length);
 
 static BaseType_t prvReadI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString );
 static BaseType_t prvWriteI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString );
@@ -107,14 +107,14 @@ static uint8_t convert_2_char_to_1_hex_byte(unsigned char *input_2_char) {
     return result;
 }
 
-static void string_to_hex(char *input_string,unsigned char input_length,uint8_t *output_buffer,unsigned char output_length) {
+static uint8_t string_to_hex(char *input_string,unsigned char input_length,uint8_t *output_buffer,unsigned char output_length) {
     unsigned char j = 0;
 #if  1
     char *input_string_end = input_string;
 
     input_string = input_string + input_length - 2;
 
-    if( strcmp(input_string_end,"0x") == 0 ) {
+    if( input_string_end[0] == '0' && input_string_end[1] == 'x' ) {
         input_string_end += 2;
     }
 
@@ -129,6 +129,7 @@ static void string_to_hex(char *input_string,unsigned char input_length,uint8_t 
         input_string -= 2;
         j++;
     }
+    return j;
 #endif
 }
 
@@ -140,6 +141,7 @@ static BaseType_t prvReadI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWriteB
     BaseType_t returnedValue = pdFALSE;
 
     uint8_t  sid = 0;
+    uint8_t  total_len = 0;
     xHCIDataField_t xHCIDataField = {
         0x00    
     };
@@ -178,6 +180,8 @@ static BaseType_t prvReadI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWriteB
         }
         xHCIDataField.ucSID = sid;
         xHCIDataField.ucI2CAddress = I2C_SIDMapToReadAddr[sid];
+
+        total_len += (sizeof(xHCIDataField.ucSID) + sizeof(xHCIDataField.ucI2CAddress));
     } else {
         return returnedValue;
     }
@@ -186,14 +190,14 @@ static BaseType_t prvReadI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWriteB
     cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 3, &lParam_len);
 
     if( cCmd_string != NULL ) {
-        string_to_hex(cCmd_string,lParam_len,&(xHCIDataField.ucI2CRegAddr),sizeof(xHCIDataField.ucI2CRegAddr));
+        total_len += string_to_hex(cCmd_string,lParam_len,&(xHCIDataField.ucI2CRegAddr),sizeof(xHCIDataField.ucI2CRegAddr));
     } else {
         return returnedValue;
     }
 
     /* Build Message Packet */
-    pxMessage.usPayloadLen = sizeof(xHCIDataField);
-    pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
+    pxMessage.usPayloadLen = total_len;
+    pvMemcpy( pxMessage.pucPayload, &xHCIDataField, pxMessage.usPayloadLen );
     s4527438_os_hci_write_cmd(&pxMessage);
 
     return returnedValue;
@@ -207,6 +211,7 @@ static BaseType_t prvWriteI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWrite
     BaseType_t returnedValue = pdFALSE;
 
     uint8_t  sid = 0;
+    uint8_t  total_len = 0;
     xHCIDataField_t xHCIDataField = {
         0x00    
     };
@@ -245,6 +250,7 @@ static BaseType_t prvWriteI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWrite
         }
         xHCIDataField.ucSID = sid;
         xHCIDataField.ucI2CAddress = I2C_SIDMapToWriteAddr[sid];
+        total_len += (sizeof(xHCIDataField.ucSID) + sizeof(xHCIDataField.ucI2CAddress));
     } else {
         return returnedValue;
     }
@@ -253,7 +259,7 @@ static BaseType_t prvWriteI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWrite
     cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 3, &lParam_len);
 
     if( cCmd_string != NULL ) {
-        string_to_hex(cCmd_string,lParam_len,&(xHCIDataField.ucI2CRegAddr),sizeof(xHCIDataField.ucI2CRegAddr));
+        total_len += string_to_hex(cCmd_string,lParam_len,&(xHCIDataField.ucI2CRegAddr),sizeof(xHCIDataField.ucI2CRegAddr));
     } else {
         return returnedValue;
     }
@@ -262,14 +268,14 @@ static BaseType_t prvWriteI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWrite
     cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 4, &lParam_len);
 
     if( cCmd_string != NULL ) {
-        string_to_hex(cCmd_string,lParam_len,&(xHCIDataField.ucI2CRegValue),sizeof(xHCIDataField.ucI2CRegValue));
+        total_len += string_to_hex(cCmd_string,lParam_len,xHCIDataField.ucI2CRegValue,sizeof(xHCIDataField.ucI2CRegValue));
     } else {
         return returnedValue;
     }
 
     /* Build Message Packet */
-    pxMessage.usPayloadLen = sizeof(xHCIDataField);
-    pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
+    pxMessage.usPayloadLen = total_len;
+    pvMemcpy( pxMessage.pucPayload, &xHCIDataField, pxMessage.usPayloadLen );
     s4527438_os_hci_write_cmd(&pxMessage);
 
     return returnedValue;
@@ -282,6 +288,7 @@ static BaseType_t prvLSM6DSLGetSysCommand(char *pcWriteBuffer, size_t xWriteBuff
     // We always need to stop search further, even if the command is not correct
     BaseType_t returnedValue = pdFALSE;
 
+    uint8_t  total_len = 0;
     xHCIDataField_t xHCIDataField = {
         0x00    
     };
@@ -291,6 +298,7 @@ static BaseType_t prvLSM6DSLGetSysCommand(char *pcWriteBuffer, size_t xWriteBuff
 
     xHCIDataField.ucSID = 1;
     xHCIDataField.ucI2CAddress = I2C_SIDMapToReadAddr[1];
+    total_len += (sizeof(xHCIDataField.ucSID) + sizeof(xHCIDataField.ucI2CAddress));
 
     /* Get parameters 1 from command string */
     cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
@@ -308,11 +316,15 @@ static BaseType_t prvLSM6DSLGetSysCommand(char *pcWriteBuffer, size_t xWriteBuff
     if( cCmd_string == NULL ) {
         return returnedValue;
     }
-    xHCIDataField.ucI2CRegValue = cCmd_string[0];
+    xHCIDataField.ucI2CRegValue[0] = cCmd_string[0];
+    total_len += sizeof(xHCIDataField.ucI2CRegValue[0]);
+
+    // NOTE: 
+    total_len += string_to_hex("0x00",sizeof("0x00"),xHCIDataField.ucI2CRegAddr,sizeof(xHCIDataField.ucI2CRegAddr));
 
     /* Build Message Packet */
-    pxMessage.usPayloadLen = sizeof(xHCIDataField);
-    pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
+    pxMessage.usPayloadLen = total_len;
+    pvMemcpy( pxMessage.pucPayload, &xHCIDataField, pxMessage.usPayloadLen );
     s4527438_os_hci_write_cmd(&pxMessage);
 
     return returnedValue;
