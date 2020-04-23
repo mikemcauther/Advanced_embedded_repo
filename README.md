@@ -1,36 +1,256 @@
-# Title: CSSE4011 Advanced Embedded Systems Git Repo
+# CSSE4011 Advanced Embedded Systems 
 
-# Author: KO-CHEN CHI, s4527438
+# 	Git Repo
 
-# Tasks Description: 
 
-## Prac1(2020/04/03): 
 
-# Folder Structure: 
+###### Author: KO-CHEN CHI, s4527438
 
-## -root 
+ 
 
-## --myoslib
- * Include any underlayer modules such as hal_xxx.c/.c , cli_xxx.c/.c , os_xxx.c/.h , lib_xxx.c/.c
+[TOC]
 
-## --pracs
+​	
 
- * Prac1, Prac2...etc.
+### Pracs: 
 
-## ---prac1
+​	[Prac1](### Prac1) (2020/04/03)
 
- * For testing error message: send_string --host 127.0.0.1 --port 9001 "led t o"
+​	[Prac2](### Prac2) (2020/04/24)
 
-## --ei-changes
+### Folder Structure:
 
- * Patches for EI-Freertos folder(From another git repo).
+- root/
+  - common/
+  - ei-changes/
+  - myoslib/
+  - pracs/
+- add_diff_files_into_ei_changes.sh
+- buildenv.sh
+- cp_py_into_pyboard.sh
+- diff_ei_changes.sh
+- overrite_diff_files_of_ei_changes.sh
+- overrite_diff_files_of_ei_freertos.sh
 
-## --tools
+### Environment Install Guide:
 
- * Include toolchain folder if user needed it.
+#### 	Step 1: 
 
-## --thirdlib
+```
+./buildenv.sh
+```
 
- * Third party libraries storage.
+- ​	Result:  It will clone ei-freertos and generate necessary environment variables.
 
-# References: 
+- ​	Generate file: 
+  - ./common/proj_common.mk
+    - This is the included header file for the Makefile of each pracs(prac1/Makefile , prac2/Makefile ...) 
+  - ./env_set.sh
+    - Executing this file to generate global variables for toolchain, STLINK ... etc.		
+
+#### 	Step 2:
+
+```
+./ei-freertos/repo_setup.sh
+```
+
+#### 	Step 3:
+
+```
+. ./env_set.sh
+```
+
+​	Set the necessary variables into self shell.
+
+### 
+
+### Pracs: 
+
+#### 	Prac1 (2020/04/03)
+
+
+
+#### 	Prac2 (2020/04/24)
+
+- ##### Design Task 1A: SCU Development Environment Installation and Integration
+
+  - (Done)
+
+- ##### Design Task 2A: Basic Example
+
+  - Result files: 
+    - myoslib/scu/main.py 
+    - myoslib/scu/led.py
+  - (Done)
+
+- ##### Design Task 1B: Host Controller Interface (HCI)
+
+  - (Done)
+
+- ##### Design Task 2B: AHU HCI HAL/OS MyOsLib Implementation
+
+  - (Done)
+
+- ##### Design Task 3B: AHU HCI MyOsLib Implementation
+
+  - (Done)
+
+- ##### PART C Tasks
+
+  - (Not Yet)
+
+- ##### Foler Structer View
+
+  - root/
+    - common/
+    - ei-changes/
+    - myoslib/
+      - hci/
+        - s4527438_cli_hci.c
+        - s4527438_cli_hci.h
+        - s4527438_hal_hci.c
+        - s4527438_hal_hci.h
+        - s4527438_hci_packet.h
+        - s4527438_os_hci.c
+        - s4527438_os_hci.h
+      - scu/
+        - hci.py
+        - led.py
+        - main.py
+    - pracs/
+      - prac2/
+        - inc/
+        - src/
+          - prac2.c
+        - Makefile
+
+- ##### Test Command:
+
+  - ```
+    i2creg r 3 0x28
+    ```
+
+    ```
+    i2creg w 5 0x29 0x04
+    ```
+
+  - ```
+    lsm6dsl r x
+    ```
+
+  - ```
+    lsm6dsl r y
+    ```
+
+    
+
+- ##### Topic: 
+
+  - HCI:
+
+    - Signals
+
+      - |      | Argon                      | BL Board        |
+        | ---- | -------------------------- | --------------- |
+        |      | (P0.08 UART1_RX) -- Pin 10 | CN3 -- D1 --TX  |
+        |      | (P0.06 UART1_TX) -- Pin 9  | CN3 -- D0 -- RX |
+        |      | GND                        | CN2 -- GND      |
+
+        
+
+    - Hardware:
+
+      - Argon
+      - B-L475E-IOT01A1
+
+  - I2C
+
+    - Data Fields
+
+      |                      | SID      (8-bits) | I2C Address include R/W bit     (8-bits) | Register Address            (8-bits) | Register values (for write) (8-bits) |
+      | -------------------- | ----------------- | ---------------------------------------- | ------------------------------------ | ------------------------------------ |
+      | Read  LSM6DSL        | 1                 | 0xD5                                     | (don't care)                         | (no field)                           |
+      | Write LSM6DSL        | 1                 | 0xD4                                     | (don't care)                         | (don't care)                         |
+      | Read LIS3MDL         | 2                 | 0x3D                                     | (don't care)                         | (no field)                           |
+      | Write LIS3MDL        | 2                 | 0x3C                                     | (don't care)                         | (don't care)                         |
+      | Read LPS22HB         | 3                 | 0xBB                                     | (don't care)                         | (no field)                           |
+      | Write LPS22HB        | 3                 | 0xBA                                     | (don't care)                         | (don't care)                         |
+      | Read VL53L0X         | 4                 | 0x53                                     | (don't care)                         | (no field)                           |
+      | Write VL53L0X        | 4                 | 0x52                                     | (don't care)                         | (don't care)                         |
+      | Read HTS221          | 5                 | 0xBF                                     | (don't care)                         | (no field)                           |
+      | Write HTS221         | 5                 | 0xBE                                     | (don't care)                         | (don't care)                         |
+      | Read LSM6DSL x value | 6                 | 0xD5                                     | 0x00                                 | x                                    |
+      | Read LSM6DSL y value | 6                 | 0xD5                                     | 0x00                                 | y                                    |
+      | Read LSM6DSL z value | 6                 | 0xD5                                     | 0x00                                 | z                                    |
+      |                      |                   |                                          |                                      |                                      |
+
+      
+
+
+
+### Reference List:
+
+​	[1] Micropython: http://docs.micropython.org/
+
+​    [2] LSM6DSL register value: https://github.com/hanyazou/nuttx/blob/8e18e8ae54f7faeb4712b615dea59f4a89bdedf2/include/nuttx/sensors/lsm6dsl.h
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Go to Real Cool Heading section](#real-cool-heading)
+
+
+
+
+
+
+
+
+
