@@ -17,5 +17,5 @@
 #include "s4527438_hal_hci.h"
 
 void s4527438_os_hci_init(void);
-void s4527438_os_hci_write_cmd(xHCICommsMessage_t *pxMessage);
+void s4527438_os_hci_write_cmd(xHCICommsMessage_t *pxMessage,uint8_t num_word,uint8_t word_size);
 #endif /* S4527438_OS_HCI_H_ */

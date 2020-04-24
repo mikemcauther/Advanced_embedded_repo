@@ -140,6 +140,9 @@ void vHCIPacketBuilder( char cByte )
         if( xMessage.usPayloadLen == 0 ) {
             usRxByteCount        = 0;
         }
+        if( HCI_PACKET_FIELD_TYPE_LEN_GET_TYPE(xHCIHeader.usType4AndPayloadLen4) != HCI_PACKET_TYPE_RESPONSE ) {
+            usRxByteCount        = 0;
+        }
     }
     /* If the complete packet has arrived */
     else if ( usRxByteCount == ( sizeof( xHCIInterfaceHeader_t ) + HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(xHCIHeader.usType4AndPayloadLen4) ) ) {

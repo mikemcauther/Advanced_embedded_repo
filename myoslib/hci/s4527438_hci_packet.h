@@ -20,14 +20,18 @@
 
 #define HCI_PACKET_FIELD_PREAMBLE     0xAA
 
-#define HCI_PACKET_TYPE_REQUEST         0x01
-#define HCI_PACKET_TYPE_RESPONSE        0x02
+#define HCI_PACKET_TYPE_REQUEST             0x01
+#define HCI_PACKET_TYPE_RESPONSE            0x02
 
 #define HCI_PACKET_FIELD_TYPE_REQUEST_WITH_LENGTH(length_8_bits)   ((HCI_PACKET_TYPE_REQUEST & 0x0F) | ((0x0F & length_8_bits) << 4))
 #define HCI_PACKET_FIELD_TYPE_RESPONSE_WITH_LENGTH(length_8_bits)   ((HCI_PACKET_TYPE_RESPONSE & 0x0F) | ((0x0F & length_8_bits) << 4))
 
 #define HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(input_8_bits)   ((0xF0 & input_8_bits) >> 4)
 #define HCI_PACKET_FIELD_TYPE_LEN_GET_TYPE(input_8_bits)   (0x0F & input_8_bits)
+
+#define HCI_PACKET_DATA_FIELD_NUM_WORD_AND_WORD_SIZE(num_word,word_size)   ((word_size & 0x0F) | ((0x0F & num_word) << 4))
+#define HCI_PACKET_DATA_LOW_GET_WORD_SIZE(input)   (0x0F & input)
+#define HCI_PACKET_DATA_HIGH_GET_NUM_WORD(input)   ((0xF0 & input) >> 4)
 
 #define HCI_PACKET_DATA_I2C_ADDR_WRITE_HTS221       0xBE
 #define HCI_PACKET_DATA_I2C_ADDR_READ_HTS221       0xBF

@@ -194,7 +194,7 @@ static BaseType_t prvReadI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWriteB
     /* Build Message Packet */
     pxMessage.usPayloadLen = sizeof(xHCIDataField);
     pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
-    s4527438_os_hci_write_cmd(&pxMessage);
+    s4527438_os_hci_write_cmd(&pxMessage,1,1);
 
     return returnedValue;
 }
@@ -270,7 +270,7 @@ static BaseType_t prvWriteI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWrite
     /* Build Message Packet */
     pxMessage.usPayloadLen = sizeof(xHCIDataField);
     pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
-    s4527438_os_hci_write_cmd(&pxMessage);
+    s4527438_os_hci_write_cmd(&pxMessage,1,1);
 
     return returnedValue;
 }
@@ -292,6 +292,8 @@ static BaseType_t prvLSM6DSLGetSysCommand(char *pcWriteBuffer, size_t xWriteBuff
     xHCIDataField.ucSID = 1;
     xHCIDataField.ucI2CAddress = I2C_SIDMapToReadAddr[1];
 
+    uint8_t num_word = 1;
+    uint8_t word_size = 2;
     /* Get parameters 1 from command string */
     cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
@@ -308,12 +310,33 @@ static BaseType_t prvLSM6DSLGetSysCommand(char *pcWriteBuffer, size_t xWriteBuff
     if( cCmd_string == NULL ) {
         return returnedValue;
     }
+    if( cCmd_string[0] == 'a' ) {
+        xHCIDataField.ucI2CRegValue = 'x';
+        /* Build Message Packet */
+        pxMessage.usPayloadLen = sizeof(xHCIDataField);
+        pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
+        s4527438_os_hci_write_cmd(&pxMessage,num_word,word_size);
+
+        xHCIDataField.ucI2CRegValue = 'y';
+        /* Build Message Packet */
+        pxMessage.usPayloadLen = sizeof(xHCIDataField);
+        pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
+        s4527438_os_hci_write_cmd(&pxMessage,num_word,word_size);
+
+        xHCIDataField.ucI2CRegValue = 'z';
+        /* Build Message Packet */
+        pxMessage.usPayloadLen = sizeof(xHCIDataField);
+        pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
+        s4527438_os_hci_write_cmd(&pxMessage,num_word,word_size);
+        
+        return returnedValue;
+    }
     xHCIDataField.ucI2CRegValue = cCmd_string[0];
 
     /* Build Message Packet */
     pxMessage.usPayloadLen = sizeof(xHCIDataField);
     pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
-    s4527438_os_hci_write_cmd(&pxMessage);
+    s4527438_os_hci_write_cmd(&pxMessage,num_word,word_size);
 
     return returnedValue;
 }
