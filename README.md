@@ -150,18 +150,47 @@
 
     - Signals
 
-      - |      | Argon                      | BL Board        |
-        | ---- | -------------------------- | --------------- |
-        |      | (P0.08 UART1_RX) -- Pin 10 | CN3 -- D1 --TX  |
-        |      | (P0.06 UART1_TX) -- Pin 9  | CN3 -- D0 -- RX |
-        |      | GND                        | CN2 -- GND      |
-
-        
+      |      | Argon                      | BL Board        |
+      | ---- | -------------------------- | --------------- |
+      |      | (P0.08 UART1_RX) -- Pin 10 | CN3 -- D1 --TX  |
+      |      | (P0.06 UART1_TX) -- Pin 9  | CN3 -- D0 -- RX |
+      |      | GND                        | CN2 -- GND      |
 
     - Hardware:
 
       - Argon
+      
       - B-L475E-IOT01A1
+      
+      - Feather Board
+      
+      - Analog Discovery 2
+      
+        |                    |                    |       | Feather Board ==> |      |      |      |      |      |      |
+        | ------------------ | ------------------ | ----- | ----------------- | ---- | ---- | ---- | ---- | ---- | ---- |
+        |                    |                    |       | UART              |      |      |      | D2   |      | A2   |
+        |                    |                    |       | TX                | RX   | 3V3  | GND  | D2   | D3   | GND  |
+        | Argon              | P0.06 TX -- Pin 9  |       | X                 |      |      |      |      |      |      |
+        |                    | P0.08 RX -- Pin 10 |       |                   | X    |      |      |      |      |      |
+        |                    | GND                |       |                   |      |      | X    |      |      |      |
+        |                    | 3V3                |       |                   |      | X    |      |      |      |      |
+        |                    | D2                 |       |                   |      |      |      |      |      |      |
+        | Feather (selfloop) | D2                 | D2    |                   | X    |      |      |      |      |      |
+        |                    |                    | D3    | X                 |      |      |      |      |      |      |
+        |                    |                    | 3V3   |                   |      | X    |      |      |      |      |
+        |                    |                    | GND   |                   |      |      | X    |      |      |      |
+        |                    | UART               | TX    | =                 |      |      |      |      | x    |      |
+        |                    |                    | RX    |                   | =    |      |      | x    |      |      |
+        |                    |                    | 3V3   |                   |      | =    |      |      |      |      |
+        |                    |                    | GND   |                   |      |      | =    |      |      |      |
+        | B-L475E-IOT01A1    | CN3                | D0 RX |                   |      |      |      |      | X    |      |
+        |                    |                    | D1 TX |                   |      |      |      | X    |      |      |
+        |                    | CN2                | GND   |                   |      |      |      |      |      | X    |
+        | Analog Discovery 2 | Channel 0 (DIO 0)  |       |                   |      |      |      |      | X    |      |
+        |                    | CHannel 8 (DIO 8)  |       |                   |      |      |      | X    |      |      |
+        |                    | GND                |       |                   |      |      |      |      |      | X    |
+      
+        
 
   - I2C
 
