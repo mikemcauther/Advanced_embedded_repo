@@ -14,9 +14,9 @@
 
 ### Pracs: 
 
-​	[Prac1](### Prac1) (2020/04/03)
+​	[Prac1](#### Prac1) (2020/04/03)
 
-​	[Prac2](### Prac2) (2020/04/24)
+​	[Prac2](#### Prac2) (2020/04/24)
 
 ### Folder Structure:
 
