@@ -13,16 +13,16 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 
 #include "FreeRTOS_CLI.h"
 
-#include "s4527438_hci_packet.h"
 #include "s4527438_os_hci.h"
-#include "s4527438_hal_hci.h"
 #include "s4527438_lib_log.h"
+#include "s4527438_hci_packet.h"
 
 #include "memory_operations.h"
 /* Private typedef -----------------------------------------------------------*/
@@ -38,19 +38,6 @@ static BaseType_t prvReadI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWriteB
 static BaseType_t prvWriteI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString );
 static BaseType_t prvLSM6DSLGetSysCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString );
 
-static uint8_t I2C_SIDMapToWriteAddr[] = {0x00 , 
-                                            HCI_PACKET_DATA_I2C_ADDR_WRITE_LSM6DSL,
-                                            HCI_PACKET_DATA_I2C_ADDR_WRITE_LIS3MDL,
-                                            HCI_PACKET_DATA_I2C_ADDR_WRITE_LPS22HB,
-                                            HCI_PACKET_DATA_I2C_ADDR_WRITE_VL53L0X,
-                                            HCI_PACKET_DATA_I2C_ADDR_WRITE_HTS221};
-
-static uint8_t I2C_SIDMapToReadAddr[] = {0x00 , 
-                                            HCI_PACKET_DATA_I2C_ADDR_READ_LSM6DSL,
-                                            HCI_PACKET_DATA_I2C_ADDR_READ_LIS3MDL,
-                                            HCI_PACKET_DATA_I2C_ADDR_READ_LPS22HB,
-                                            HCI_PACKET_DATA_I2C_ADDR_READ_VL53L0X,
-                                            HCI_PACKET_DATA_I2C_ADDR_READ_HTS221};
 
 CLI_Command_Definition_t xReadI2CRegGetSys = {  /* Structure that defines the "i2creg r <sid> <regaddr>" command line command. */
     "i2creg",
@@ -140,12 +127,7 @@ static BaseType_t prvReadI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWriteB
     BaseType_t returnedValue = pdFALSE;
 
     uint8_t  sid = 0;
-    xHCIDataField_t xHCIDataField = {
-        0x00    
-    };
-    xHCICommsMessage_t pxMessage ={
-        0x00
-    };
+    uint8_t I2CRegAddr = 0;
 
     /* Get parameters 1 from command string */
     cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
@@ -176,8 +158,6 @@ static BaseType_t prvReadI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWriteB
         if( sid < HCI_PACKET_DATA_I2C_SID_MIN || sid > HCI_PACKET_DATA_I2C_SID_MAX ){
             return returnedValue;
         }
-        xHCIDataField.ucSID = sid;
-        xHCIDataField.ucI2CAddress = I2C_SIDMapToReadAddr[sid];
     } else {
         return returnedValue;
     }
@@ -186,15 +166,13 @@ static BaseType_t prvReadI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWriteB
     cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 3, &lParam_len);
 
     if( cCmd_string != NULL ) {
-        string_to_hex(cCmd_string,lParam_len,&(xHCIDataField.ucI2CRegAddr),sizeof(xHCIDataField.ucI2CRegAddr));
+        string_to_hex(cCmd_string,lParam_len,&I2CRegAddr,sizeof(I2CRegAddr));
     } else {
         return returnedValue;
     }
 
     /* Build Message Packet */
-    pxMessage.usPayloadLen = sizeof(xHCIDataField);
-    pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
-    s4527438_os_hci_write_cmd(&pxMessage,1,1);
+    s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, 0,1,1);
 
     return returnedValue;
 }
@@ -207,12 +185,8 @@ static BaseType_t prvWriteI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWrite
     BaseType_t returnedValue = pdFALSE;
 
     uint8_t  sid = 0;
-    xHCIDataField_t xHCIDataField = {
-        0x00    
-    };
-    xHCICommsMessage_t pxMessage ={
-        0x00
-    };
+    uint8_t I2CRegAddr = 0;
+    uint8_t I2CRegValue = 0;
 
     /* Get parameters 1 from command string */
     cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
@@ -243,8 +217,6 @@ static BaseType_t prvWriteI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWrite
         if( sid < HCI_PACKET_DATA_I2C_SID_MIN || sid > HCI_PACKET_DATA_I2C_SID_MAX ){
             return returnedValue;
         }
-        xHCIDataField.ucSID = sid;
-        xHCIDataField.ucI2CAddress = I2C_SIDMapToWriteAddr[sid];
     } else {
         return returnedValue;
     }
@@ -253,7 +225,7 @@ static BaseType_t prvWriteI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWrite
     cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 3, &lParam_len);
 
     if( cCmd_string != NULL ) {
-        string_to_hex(cCmd_string,lParam_len,&(xHCIDataField.ucI2CRegAddr),sizeof(xHCIDataField.ucI2CRegAddr));
+        string_to_hex(cCmd_string,lParam_len,&I2CRegAddr,sizeof(I2CRegAddr));
     } else {
         return returnedValue;
     }
@@ -262,15 +234,13 @@ static BaseType_t prvWriteI2CRegGetSysCommand(char *pcWriteBuffer, size_t xWrite
     cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 4, &lParam_len);
 
     if( cCmd_string != NULL ) {
-        string_to_hex(cCmd_string,lParam_len,&(xHCIDataField.ucI2CRegValue),sizeof(xHCIDataField.ucI2CRegValue));
+        string_to_hex(cCmd_string,lParam_len,&I2CRegValue,sizeof(I2CRegValue));
     } else {
         return returnedValue;
     }
 
     /* Build Message Packet */
-    pxMessage.usPayloadLen = sizeof(xHCIDataField);
-    pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
-    s4527438_os_hci_write_cmd(&pxMessage,1,1);
+    s4527438_os_hci_write_reg_cmd(sid, I2CRegAddr, I2CRegValue,1,1);
 
     return returnedValue;
 }
@@ -281,16 +251,8 @@ static BaseType_t prvLSM6DSLGetSysCommand(char *pcWriteBuffer, size_t xWriteBuff
     const char *cCmd_string;
     // We always need to stop search further, even if the command is not correct
     BaseType_t returnedValue = pdFALSE;
-
-    xHCIDataField_t xHCIDataField = {
-        0x00    
-    };
-    xHCICommsMessage_t pxMessage ={
-        0x00
-    };
-
-    xHCIDataField.ucSID = 1;
-    xHCIDataField.ucI2CAddress = I2C_SIDMapToReadAddr[1];
+    uint8_t  sid = 1;
+    uint8_t I2CRegAddr = 0;
 
     uint8_t num_word = 1;
     uint8_t word_size = 2;
@@ -311,32 +273,18 @@ static BaseType_t prvLSM6DSLGetSysCommand(char *pcWriteBuffer, size_t xWriteBuff
         return returnedValue;
     }
     if( cCmd_string[0] == 'a' ) {
-        xHCIDataField.ucI2CRegValue = 'x';
         /* Build Message Packet */
-        pxMessage.usPayloadLen = sizeof(xHCIDataField);
-        pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
-        s4527438_os_hci_write_cmd(&pxMessage,num_word,word_size);
+        s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, 'x',num_word,word_size);
 
-        xHCIDataField.ucI2CRegValue = 'y';
         /* Build Message Packet */
-        pxMessage.usPayloadLen = sizeof(xHCIDataField);
-        pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
-        s4527438_os_hci_write_cmd(&pxMessage,num_word,word_size);
+        s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, 'y',num_word,word_size);
 
-        xHCIDataField.ucI2CRegValue = 'z';
         /* Build Message Packet */
-        pxMessage.usPayloadLen = sizeof(xHCIDataField);
-        pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
-        s4527438_os_hci_write_cmd(&pxMessage,num_word,word_size);
+        s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, 'z',num_word,word_size);
         
         return returnedValue;
     }
-    xHCIDataField.ucI2CRegValue = cCmd_string[0];
-
-    /* Build Message Packet */
-    pxMessage.usPayloadLen = sizeof(xHCIDataField);
-    pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
-    s4527438_os_hci_write_cmd(&pxMessage,num_word,word_size);
+    s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, cCmd_string[0],num_word,word_size);
 
     return returnedValue;
 }

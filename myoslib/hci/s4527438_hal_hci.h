@@ -14,6 +14,7 @@
 #ifndef S4527438_HAL_HCI_H_
 #define S4527438_HAL_HCI_H_
 
+
 #define MESSAGE_LOG_STRING_BUFFER_SIZE      60
 /**<@brief Base Message Structure & Metadata */
 typedef struct xHCICommsMessage_t
