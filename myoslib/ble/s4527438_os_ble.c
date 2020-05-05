@@ -1,9 +1,9 @@
 /** 
  **************************************************************
- * @file mylib/s4527438_os_hci.c
+ * @file mylib/s4527438_os_ble.c
  * @author KO-CHEN CHI - s4527438
  * @date 26032019
- * @brief mylib hci driver
+ * @brief mylib ble driver
  * REFERENCE: 
  ***************************************************************
  * EXTERNAL FUNCTIONS 
@@ -134,7 +134,7 @@ static void handle_tdf_476(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_475(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_474(xBLETdfMessage_t* tdfInfo);
 
-void s4527438_os_hci_init(void) {
+void s4527438_os_ble_init(void) {
 
     s4527438QueueBLETdfPacketSend = xQueueCreate(QUEUE_LENGTH, sizeof(struct xBLETdfMessage_t));
     xBLEQueueSet = xQueueCreateSet(QUEUE_LENGTH);

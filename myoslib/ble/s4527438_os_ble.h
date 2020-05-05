@@ -18,7 +18,7 @@
 
 typedef struct xBLETdfMessage_t
 {
-    uint8_t             usTdfIndex; /**< Message Tdf Index */
+    uint16_t            usTdfIndex; /**< Message Tdf Index */
     uint8_t             usTdfFieldBit; /**< Message Tdf Field Index */
     uint8_t             usHCIMapSID;
     uint8_t             usI2CRegAddr;
