@@ -19,6 +19,10 @@ do
                 echo ""
                 echo "diff FILE: ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH}"
                 diff ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH}
+            else
+                echo ""
+                echo "New diff FILE: ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH}"
+                (cd "${EI_ROOT_PATH}" && git diff ${FILE_PATH})
             fi
         fi
     fi
