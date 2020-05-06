@@ -22,6 +22,7 @@
 
 #include "s4527438_os_ble.h"
 #include "s4527438_lib_log.h"
+#include "unified_comms_bluetooth.h"
 
 #include "memory_operations.h"
 /* Private typedef -----------------------------------------------------------*/
@@ -54,6 +55,7 @@ static BaseType_t prvBLESysCommand(char *pcWriteBuffer, size_t xWriteBufferLen, 
     BaseType_t returnedValue = pdFALSE;
 
     uint8_t sub_cmd = 's';
+    uint8_t scan_switch = 'o';
     uint16_t tdf_idx = 0;
     /* Get parameters 1 from command string */
     cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
@@ -71,6 +73,15 @@ static BaseType_t prvBLESysCommand(char *pcWriteBuffer, size_t xWriteBufferLen, 
 
     if( cCmd_string == NULL ) {
         return returnedValue;
+    }
+    scan_switch = cCmd_string[0];
+
+    if( sub_cmd == 's' ) {
+        if( scan_switch == 'o' ) {
+            xBluetoothComms.fnEnable(true);
+        } else if (scan_switch == 'f') {
+            xBluetoothComms.fnEnable(false);
+        }
     }
 
     if( sub_cmd == 'c' ) {
