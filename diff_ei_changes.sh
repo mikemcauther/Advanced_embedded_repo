@@ -16,9 +16,12 @@ do
         #echo $FILE_PATH
         if [ -f "${EI_ROOT_PATH}/${FILE_PATH}" ]; then
             if [ -f "${EI_CHANGE_PATH}/${FILE_PATH}" ]; then
-                echo ""
-                echo "diff FILE: ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH}"
-                diff ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH}
+                TEMP_DIFF=$(diff ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH})
+                if [ ${#TEMP_DIFF} -gt 0 ]; then
+                    echo ""
+                    echo "diff FILE: ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH}"
+                    echo "${TEMP_DIFF}"
+                fi
             else
                 echo ""
                 echo "New diff FILE: ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH}"
@@ -47,8 +50,12 @@ do
     echo ""
     if [ -f "${EI_ROOT_PATH}/${FILE_PATH}" ]; then
         if [ -f "${EI_CHANGE_PATH}/${FILE_PATH}" ]; then
-            echo "diff FILE: ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH}"
-            diff ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH}
+            TEMP_DIFF=$(diff ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH})
+            if [ ${#TEMP_DIFF} -gt 0 ]; then
+                echo ""
+                echo "diff FILE: ${EI_ROOT_PATH}/${FILE_PATH} ${EI_CHANGE_PATH}/${FILE_PATH}"
+                echo "${TEMP_DIFF}"
+            fi
         else
             echo "Not exist in CHANGE FOLDER: ${EI_CHANGE_PATH}/${FILE_PATH}"
         fi
