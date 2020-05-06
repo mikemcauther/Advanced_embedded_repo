@@ -238,7 +238,7 @@ static void handle_tdf_471(xBLETdfMessage_t* tdfInfo)
         .gyro_z = (tdfInfo->usReceivedValue[10] | (tdfInfo->usReceivedValue[11] << 8))
     };
 
-	eTdfAddMulti(BLE_LOG, TDF_ACC_XYZ_4G, TDF_TIMESTAMP_NONE, NULL, &tdfSentObj);
+	eTdfAddMulti(BLE_LOG, TDF_LSM6DSL, TDF_TIMESTAMP_NONE, NULL, &tdfSentObj);
 	eTdfFlushMulti(BLE_LOG);
 }
 
