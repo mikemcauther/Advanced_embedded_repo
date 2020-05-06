@@ -57,7 +57,7 @@ class I2C_SENSOR():
 
 
         if self._is_write:
-            print('[I2C_SENSOR] sid = {}, i2c_address = {}, reg_addr = {}, reg_value = {}'.format(self._sid,self._i2c_address,self._reg_addr,self._reg_value))
+            #print('[I2C_SENSOR] sid = {}, i2c_address = {}, reg_addr = {}, reg_value = {}'.format(self._sid,self._i2c_address,self._reg_addr,self._reg_value))
             self._buf = bytearray([self._reg_value])
             self._i2c_obj.writeto_mem(self._i2c_address, self._reg_addr, self._buf, addrsize=8)
             self._replay_packet_size = 0
@@ -70,55 +70,72 @@ class I2C_SENSOR():
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_x_buf[0] = self._buf[0]
 
+                    self.self_string()
                     # ACC X HIGH
                     self._reg_addr = bytearray([self.LSM6DSL_X_HIGH_REG])[0]
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_x_buf[1] = self._buf[0]
 
+                    self.self_string()
                     # ACC Y LOW
                     self._reg_addr = bytearray([self.LSM6DSL_Y_LOW_REG])[0]
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_y_buf[0] = self._buf[0]
+                    self.self_string()
+
                     # ACC Y HIGH
                     self._reg_addr = bytearray([self.LSM6DSL_Y_HIGH_REG])[0]
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_y_buf[1] = self._buf[0]
+                    self.self_string()
 
                     # ACC Z LOW
                     self._reg_addr = bytearray([self.LSM6DSL_Z_LOW_REG])[0]
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_z_buf[0] = self._buf[0]
+                    self.self_string()
+
                     # ACC Z HIGH
                     self._reg_addr = bytearray([self.LSM6DSL_Z_HIGH_REG])[0]
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_z_buf[1] = self._buf[0]
+                    self.self_string()
 
                     # GYRO X LOW
                     self._reg_addr = bytearray([self.LSM6DSL_GYRO_X_LOW_REG])[0]
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_gyro_x_buf[0] = self._buf[0]
+                    self.self_string()
+
                     # GYRO X HIGH
                     self._reg_addr = bytearray([self.LSM6DSL_GYRO_X_HIGH_REG])[0]
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_gyro_x_buf[1] = self._buf[0]
+                    self.self_string()
 
                     # GYRO Y LOW
                     self._reg_addr = bytearray([self.LSM6DSL_GYRO_Y_LOW_REG])[0]
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_gyro_y_buf[0] = self._buf[0]
+                    self.self_string()
+
                     # GYRO Y HIGH
                     self._reg_addr = bytearray([self.LSM6DSL_GYRO_Y_HIGH_REG])[0]
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_gyro_y_buf[1] = self._buf[0]
+                    self.self_string()
 
                     # GYRO Z LOW
                     self._reg_addr = bytearray([self.LSM6DSL_GYRO_Z_LOW_REG])[0]
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_gyro_z_buf[0] = self._buf[0]
+                    self.self_string()
+
                     # GYRO Z HIGH
                     self._reg_addr = bytearray([self.LSM6DSL_GYRO_Z_HIGH_REG])[0]
                     self._i2c_obj.readfrom_mem_into(self._i2c_address, self._reg_addr, self._buf,addrsize=8)
                     self._lsm6dsl_gyro_z_buf[1] = self._buf[0]
+                    self.self_string()
 
                     self._replay_packet_size = 12
                     return
@@ -176,29 +193,32 @@ class I2C_SENSOR():
     def construct_reply_data_payload(self):
         if self._replay_packet_size == 1:
             return self._buf
-        if self._replay_packet_size == 2:
-            if self._reg_value == ord('x'):
-                return self._lsm6dsl_x_buf
-            if self._reg_value == ord('y'):
-                return self._lsm6dsl_y_buf
-            if self._reg_value == ord('z'):
-                return self._lsm6dsl_z_buf
-            if self._reg_value == ord('a'):
-                buffer = bytearray([])
+        if self._i2c_address == self.LSM6DSL_ADDR:
+            if self._replay_packet_size == 2:
+                if self._reg_value == ord('x'):
+                    return self._lsm6dsl_x_buf
+                if self._reg_value == ord('y'):
+                    return self._lsm6dsl_y_buf
+                if self._reg_value == ord('z'):
+                    return self._lsm6dsl_z_buf
+            if self._replay_packet_size > 2:
+                if self._reg_value == ord('a'):
+                    buffer = bytearray([])
 
-                buffer += self._lsm6dsl_x_buf
-                buffer += self._lsm6dsl_y_buf
-                buffer += self._lsm6dsl_z_buf
+                    buffer += self._lsm6dsl_x_buf
+                    buffer += self._lsm6dsl_y_buf
+                    buffer += self._lsm6dsl_z_buf
 
-                buffer += self._lsm6dsl_gyro_x_buf
-                buffer += self._lsm6dsl_gyro_y_buf
-                buffer += self._lsm6dsl_gyro_z_buf
-                return buffer
+                    buffer += self._lsm6dsl_gyro_x_buf
+                    buffer += self._lsm6dsl_gyro_y_buf
+                    buffer += self._lsm6dsl_gyro_z_buf
+                    return buffer
 
 
     def self_string(self):
-        print('[I2C_SENSOR] sid = {}, i2c_address = {}, reg_addr = {}, reg_value = {}'.format(self._sid,self._i2c_address,self._reg_addr,self._reg_value))
-        print('[I2C_SENSOR] result = {}'.format(self._buf))
+        #print('[I2C_SENSOR] sid = {}, i2c_address = {}, reg_addr = {}, reg_value = {}'.format(self._sid,self._i2c_address,self._reg_addr,self._reg_value))
+        #print('[I2C_SENSOR] result = {}'.format(self._buf))
+        return
 
 class HCI_UART(UART):                                   
 

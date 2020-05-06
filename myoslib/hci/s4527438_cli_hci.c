@@ -273,14 +273,17 @@ static BaseType_t prvLSM6DSLGetSysCommand(char *pcWriteBuffer, size_t xWriteBuff
         return returnedValue;
     }
     if( cCmd_string[0] == 'a' ) {
+        num_word = 6;
+        word_size = 2;
+        s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, 'a',num_word,word_size);
         /* Build Message Packet */
-        s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, 'x',num_word,word_size);
+        //s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, 'x',num_word,word_size);
 
         /* Build Message Packet */
-        s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, 'y',num_word,word_size);
+        //s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, 'y',num_word,word_size);
 
         /* Build Message Packet */
-        s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, 'z',num_word,word_size);
+        //s4527438_os_hci_read_reg_cmd(sid, I2CRegAddr, 'z',num_word,word_size);
         
         return returnedValue;
     }
