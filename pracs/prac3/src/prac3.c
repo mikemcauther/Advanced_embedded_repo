@@ -11,6 +11,8 @@
 
 #include "log.h"
 #include "watchdog.h"
+#include "argon.h"
+#include "gpio.h"
 
 #include "test_reporting.h"
 
@@ -22,6 +24,7 @@
 #include "s4527438_os_led.h"
 #include "s4527438_os_log.h"
 #include "s4527438_os_hci.h"
+#include "s4527438_os_ble.h"
 
 // cli related header
 #include "s4527438_cli_led.h"
@@ -37,6 +40,8 @@
 /* Type Definitions -----------------------------------------*/
 
 /* Function Declarations ------------------------------------*/
+static void prvPushButtonInterruptRoutine( void );
+static bool button_value = false;
 /* Private Variables ----------------------------------------*/
 
 /*-----------------------------------------------------------*/
@@ -64,6 +69,10 @@ void vApplicationStartupCallback( void )
 		vWatchdogPrintRebootReason( LOG_APPLICATION, LOG_INFO, pxRebootData );
 	}
 
+	/* Enable the button */
+	vGpioSetup( BUTTON_1, GPIO_INPUTPULL, GPIO_INPUTPULL_PULLUP );
+	eGpioConfigureInterrupt( BUTTON_1, true, GPIO_INTERRUPT_RISING_EDGE, prvPushButtonInterruptRoutine );
+
     s4527438_hal_hci_init();
 
     s4527438_os_led_init();
@@ -81,5 +90,25 @@ void vApplicationStartupCallback( void )
     s4527438_cli_ble_init();
 }
 
+void vApplicationTickCallback(uint32_t ulUptime) 
+{
+	UNUSED(ulUptime);
+    
+    if( button_value ) {
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"Button pushed , <%d>\r\n",button_value);
+    } else {
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"Button not pushed , <%d>\r\n",button_value);
+    }
+}
+
+void prvPushButtonInterruptRoutine( void )
+{
+	//BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    button_value = (button_value)?false:true;
+    //s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"Button pushed by ISR\r\n");
+	//xSemaphoreGiveFromISR( xLis3dhInterruptSemaphore, &xHigherPriorityTaskWoken );
+	//portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+}
 /*-----------------------------------------------------------*/
 
