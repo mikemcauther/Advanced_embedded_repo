@@ -156,7 +156,7 @@ void s4527438_os_ble_tdf_get_sensor_value_cmd(uint16_t tdfId) {
                     .usTdfFieldBit = BLE_TDF_471_FIELD_ALL_READY_BIT,
                     .usI2CRegValue = BLE_TDF_471_FIELD_ALL_REG_VALUE
                 };
-                s4527438_os_hci_tdf_write_cmd(BLE_TDF_471_FIELD_ALL_NUM_WORD,BLE_TDF_471_FIELD_ALL_WORD_SIZE,&tdfInfo);
+                s4527438_os_hci_tdf_read_cmd(BLE_TDF_471_FIELD_ALL_NUM_WORD,BLE_TDF_471_FIELD_ALL_WORD_SIZE,&tdfInfo);
             }
             break;
         default:

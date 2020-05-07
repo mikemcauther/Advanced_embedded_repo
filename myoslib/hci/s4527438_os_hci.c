@@ -162,7 +162,7 @@ void s4527438_os_hci_read_reg_cmd(uint8_t  sid, uint8_t I2CRegAddr, uint8_t I2CR
     }
 }
 
-void s4527438_os_hci_tdf_write_cmd(uint8_t num_word,uint8_t word_size,xBLETdfMessage_t* tdfInfo) {
+void s4527438_os_hci_tdf_read_cmd(uint8_t num_word,uint8_t word_size,xBLETdfMessage_t* tdfInfo) {
     /* Build HCI comms and data field */
     xHCIDataField_t xHCIDataField = {
         0x00    

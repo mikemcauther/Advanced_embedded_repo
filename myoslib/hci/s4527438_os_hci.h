@@ -35,5 +35,5 @@ typedef struct xHCIReceiveRoute_t
 void s4527438_os_hci_init(void);
 void s4527438_os_hci_write_reg_cmd(uint8_t  sid, uint8_t I2CRegAddr, uint8_t I2CRegValue,uint8_t num_word,uint8_t word_size);
 void s4527438_os_hci_read_reg_cmd(uint8_t  sid, uint8_t I2CRegAddr, uint8_t I2CRegValue,uint8_t num_word,uint8_t word_size);
-void s4527438_os_hci_tdf_write_cmd(uint8_t num_word,uint8_t word_size,xBLETdfMessage_t* tdfInfo);
+void s4527438_os_hci_tdf_read_cmd(uint8_t num_word,uint8_t word_size,xBLETdfMessage_t* tdfInfo);
 #endif /* S4527438_OS_HCI_H_ */
