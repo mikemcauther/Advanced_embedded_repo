@@ -125,7 +125,7 @@ void vHCIPacketBuilder( char cByte )
     }
 
     /* If we're looking for SYNC bytes */
-    if ( usRxByteCount == 0 ) {
+    if ( usCurrentByte == 0 ) {
         /* Check that sync bytes match */
         if ( pucRxBuffer[usCurrentByte] != pucSyncBytes[usCurrentByte] ) {
             usRxByteCount = 0;
