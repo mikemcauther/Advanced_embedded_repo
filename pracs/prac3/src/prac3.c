@@ -102,10 +102,12 @@ void vApplicationTickCallback(uint32_t ulUptime)
 	UNUSED(ulUptime);
     
     if( xEventGroupGetBits( pxPushButtonState ) & PUSHBUTTON_PUSHED ) {
+        s4527438_os_ble_tdf_continuous_mode(472,BLE_TDF_CONTINUOUS_START);
         s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"Button pushed \r\n");
     }
     if( xEventGroupGetBits( pxPushButtonState ) & PUSHBUTTON_RELEASE ) {
-        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"Button not pushed \r\n");
+        s4527438_os_ble_tdf_continuous_mode(472,BLE_TDF_CONTINUOUS_STOP);
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"Button release \r\n");
     }
 }
 

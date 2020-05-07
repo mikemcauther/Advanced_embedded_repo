@@ -134,6 +134,7 @@ static void handle_tdf_476(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_475(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_474(xBLETdfMessage_t* tdfInfo);
 static void handle_continuous_mode(xBLETdfMessage_t* tdfInfo);
+static uint8_t tdfId_map_to_sid(uint16_t tdfId);
 
 void s4527438_os_ble_init(void) {
 
@@ -168,6 +169,57 @@ void s4527438_os_ble_tdf_result_cmd(xBLETdfMessage_t *tdfInfo) {
     if (s4527438QueueBLETdfPacketSend != NULL) { /* Check if queue exists */
         xQueueSend(s4527438QueueBLETdfPacketSend, ( void * ) tdfInfo, ( portTickType ) 0 );
     }
+}
+
+void s4527438_os_ble_tdf_continuous_mode(uint16_t tdfId,eBLETdfContinuousModeState_t mode_state) {
+    uint8_t sid = tdfId_map_to_sid(tdfId);
+    if( mode_state == BLE_TDF_CONTINUOUS_START ) {
+        s4527438_os_hci_read_reg_cmd(sid, 0x00, 'c',0,0);
+    } else if(mode_state == BLE_TDF_CONTINUOUS_STOP) {
+        s4527438_os_hci_read_reg_cmd(sid, 0x00, 'p',0,0);
+    }
+}
+
+static uint8_t tdfId_map_to_sid(uint16_t tdfId) {
+    uint8_t sid = 0;
+    switch(tdfId)
+    {
+        /* pressure / temperature */
+        case 342:
+            sid =  BLE_TDF_342_SID;
+            break;
+
+        /* xyz gyro-xyz */
+        case 471:
+            sid =  BLE_TDF_471_SID;
+            break;
+
+        /* Uptime */
+        case 241:
+            sid =  BLE_TDF_241_SID;
+            break;
+
+        /* 3D orientation */
+        case 472:
+            sid =  BLE_TDF_472_SID;
+            break;
+
+        /* height */
+        case 476:
+            break;
+
+        /* range */
+        case 475:
+            sid =  BLE_TDF_475_SID;
+            break;
+
+        /* angle */
+        case 474:
+            break;
+        default:
+            break;
+      }
+    return sid;
 }
 
 static void BLETdfHandlerTask( void ) {

@@ -27,7 +27,14 @@ typedef struct xBLETdfMessage_t
     uint8_t             usReceivedValue[BLE_TDF_VALUE_MAX_SIZE];   /**< Message payload */
 } ATTR_PACKED xBLETdfMessage_t;
 
+typedef enum eBLETdfContinuousModeState_t {
+    BLE_TDF_CONTINUOUS_STOP = 0,
+    BLE_TDF_CONTINUOUS_START = 1
+} eBLETdfContinuousModeState_t;
+
 void s4527438_os_ble_init(void);
 void s4527438_os_ble_tdf_get_sensor_value_cmd(uint16_t tdfId);
 void s4527438_os_ble_tdf_result_cmd(xBLETdfMessage_t *tdfInfo);
+
+void s4527438_os_ble_tdf_continuous_mode(uint16_t tdfId,eBLETdfContinuousModeState_t mode_state);
 #endif /* S4527438_OS_BLE_H_ */
