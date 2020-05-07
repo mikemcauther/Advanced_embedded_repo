@@ -41,7 +41,9 @@
 /* Type Definitions -----------------------------------------*/
 typedef enum ePushButtonState_t {
     PUSHBUTTON_RELEASE  = 0x01,
-    PUSHBUTTON_PUSHED = 0x02
+    PUSHBUTTON_ACTIVE_PUSHED = 0x02,
+    PUSHBUTTON_ACTIVE = 0x04,
+    PUSHBUTTON_DEACTIVE_PUSHED = 0x08,
 } ePushButtonState_t;
 
 /* Function Declarations ------------------------------------*/
@@ -101,13 +103,19 @@ void vApplicationTickCallback(uint32_t ulUptime)
 {
 	UNUSED(ulUptime);
     
-    if( xEventGroupGetBits( pxPushButtonState ) & PUSHBUTTON_PUSHED ) {
+    if( xEventGroupGetBits( pxPushButtonState ) & PUSHBUTTON_ACTIVE_PUSHED ) {
         s4527438_os_ble_tdf_continuous_mode(472,BLE_TDF_CONTINUOUS_START);
         s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"Button pushed \r\n");
+
+        xEventGroupClearBits( pxPushButtonState, PUSHBUTTON_ACTIVE_PUSHED );
+        xEventGroupSetBits( pxPushButtonState, PUSHBUTTON_ACTIVE);
     }
-    if( xEventGroupGetBits( pxPushButtonState ) & PUSHBUTTON_RELEASE ) {
+    if( xEventGroupGetBits( pxPushButtonState ) & PUSHBUTTON_DEACTIVE_PUSHED ) {
         s4527438_os_ble_tdf_continuous_mode(472,BLE_TDF_CONTINUOUS_STOP);
         s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"Button release \r\n");
+
+        xEventGroupClearBits( pxPushButtonState, PUSHBUTTON_DEACTIVE_PUSHED );
+        xEventGroupSetBits( pxPushButtonState, PUSHBUTTON_RELEASE);
     }
 }
 
@@ -118,10 +126,10 @@ void prvPushButtonInterruptRoutine( void )
 
     if( xEventGroupGetBitsFromISR( pxPushButtonState ) & PUSHBUTTON_RELEASE ) {
         xEventGroupClearBitsFromISR( pxPushButtonState, PUSHBUTTON_RELEASE );
-        xEventGroupSetBitsFromISR( pxPushButtonState, PUSHBUTTON_PUSHED ,&xHigherPriorityTaskWoken);
-    }else if( xEventGroupGetBitsFromISR( pxPushButtonState ) & PUSHBUTTON_PUSHED ) {
-        xEventGroupClearBitsFromISR( pxPushButtonState, PUSHBUTTON_PUSHED );
-        xEventGroupSetBitsFromISR( pxPushButtonState, PUSHBUTTON_RELEASE ,&xHigherPriorityTaskWoken);
+        xEventGroupSetBitsFromISR( pxPushButtonState, PUSHBUTTON_ACTIVE_PUSHED ,&xHigherPriorityTaskWoken);
+    }else if( xEventGroupGetBitsFromISR( pxPushButtonState ) & PUSHBUTTON_ACTIVE ) {
+        xEventGroupClearBitsFromISR( pxPushButtonState, PUSHBUTTON_ACTIVE );
+        xEventGroupSetBitsFromISR( pxPushButtonState, PUSHBUTTON_DEACTIVE_PUSHED ,&xHigherPriorityTaskWoken);
     }
 	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
     //s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"Button pushed by ISR\r\n");
