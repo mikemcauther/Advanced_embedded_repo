@@ -14,13 +14,21 @@
 #ifndef S4527438_HAL_HCI_H_
 #define S4527438_HAL_HCI_H_
 
+#include "s4527438_hci_packet.h"
 
 #define MESSAGE_LOG_STRING_BUFFER_SIZE      60
-/**<@brief Base Message Structure & Metadata */
+
+typedef enum eHCICommsPackageType_t {
+    HCI_TYPE_REQUEST = HCI_PACKET_TYPE_REQUEST,
+    HCI_TYPE_RESPONSE = HCI_PACKET_TYPE_RESPONSE,
+    HCI_TYPE_CONTINUOUS = HCI_PACKET_TYPE_CONTINUOUS 
+} eHCICommsPackageType_t;
+
 typedef struct xHCICommsMessage_t
 {
-    uint8_t     pucPayload[MESSAGE_LOG_STRING_BUFFER_SIZE];   /**< Message payload */
-    uint8_t     usPayloadLen; /**< Message payload length */
+    eHCICommsPackageType_t      ucPayloadType; /**< Message payload type */
+    uint8_t                     usPayloadLen; /**< Message payload length */
+    uint8_t                     pucPayload[MESSAGE_LOG_STRING_BUFFER_SIZE];   /**< Message payload */
 } ATTR_PACKED xHCICommsMessage_t;
 
 typedef struct xHCICommsInterface_t xHCICommsInterface_t;

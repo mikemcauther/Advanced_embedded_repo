@@ -113,6 +113,7 @@ void s4527438_os_hci_write_reg_cmd(uint8_t  sid, uint8_t I2CRegAddr, uint8_t I2C
 
     /* Build Message Packet */
     pxMessage.usPayloadLen = sizeof(xHCIDataField);
+    pxMessage.ucPayloadType = HCI_TYPE_REQUEST;
     pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
 
     if (s4527438QueueHCIWritePacketSend != NULL) { /* Check if queue exists */
@@ -146,6 +147,7 @@ void s4527438_os_hci_read_reg_cmd(uint8_t  sid, uint8_t I2CRegAddr, uint8_t I2CR
     
     /* Build Message Packet */
     pxMessage.usPayloadLen = sizeof(xHCIDataField);
+    pxMessage.ucPayloadType = HCI_TYPE_REQUEST;
     pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
 
     if (s4527438QueueHCIWritePacketSend != NULL) { /* Check if queue exists */
@@ -178,6 +180,7 @@ void s4527438_os_hci_tdf_write_cmd(uint8_t num_word,uint8_t word_size,xBLETdfMes
 
     /* Build Message Packet */
     pxMessage.usPayloadLen = sizeof(xHCIDataField);
+    pxMessage.ucPayloadType = HCI_TYPE_REQUEST;
     pvMemcpy( pxMessage.pucPayload, &xHCIDataField, sizeof(xHCIDataField) );
 
     if (s4527438QueueHCIWritePacketSend != NULL) { /* Check if queue exists */

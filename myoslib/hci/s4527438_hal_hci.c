@@ -134,23 +134,21 @@ void vHCIPacketBuilder( char cByte )
     /* If the header is complete */
     else if ( usRxByteCount == sizeof( xHCIInterfaceHeader_t ) ) {
         pvMemcpy( &xHCIHeader, pucRxBuffer, sizeof( xHCIInterfaceHeader_t ) );
-        xHCICommsMessage_t xMessage = {
-            .usPayloadLen = HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(xHCIHeader.usType4AndPayloadLen4)
-        };
-        if( xMessage.usPayloadLen == 0 ) {
+        if( HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(xHCIHeader.usType4AndPayloadLen4) == 0 ) {
             usRxByteCount        = 0;
         }
-        if( HCI_PACKET_FIELD_TYPE_LEN_GET_TYPE(xHCIHeader.usType4AndPayloadLen4) != HCI_PACKET_TYPE_RESPONSE ) {
+        if( HCI_PACKET_FIELD_TYPE_LEN_GET_TYPE(xHCIHeader.usType4AndPayloadLen4) != HCI_PACKET_TYPE_RESPONSE &&
+            HCI_PACKET_FIELD_TYPE_LEN_GET_TYPE(xHCIHeader.usType4AndPayloadLen4) != HCI_PACKET_TYPE_CONTINUOUS ) {
             usRxByteCount        = 0;
         }
     }
     /* If the complete packet has arrived */
     else if ( usRxByteCount == ( sizeof( xHCIInterfaceHeader_t ) + HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(xHCIHeader.usType4AndPayloadLen4) ) ) {
         xHCICommsMessage_t xMessage = {
+            .ucPayloadType = HCI_PACKET_FIELD_TYPE_LEN_GET_TYPE(xHCIHeader.usType4AndPayloadLen4),
             .usPayloadLen = HCI_PACKET_FIELD_TYPE_LEN_GET_LENGTH(xHCIHeader.usType4AndPayloadLen4)
         };
         pvMemcpy( xMessage.pucPayload, pucRxBuffer + sizeof( xHCIInterfaceHeader_t ), xMessage.usPayloadLen );
-        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[HCI Event]: sizeof( xHCIInterfaceHeader_t ) = [%d]",sizeof( xHCIInterfaceHeader_t ));
         s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[HCI Event]: pucRxBuffer = [%x:%x:%x:%x:%x:%x:%x]",pucRxBuffer[0],pucRxBuffer[1],pucRxBuffer[2],pucRxBuffer[3],pucRxBuffer[4],pucRxBuffer[5],pucRxBuffer[6]);
         s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[HCI Event]: xMessage.pucPayload = [%x:%x:%x:%x:%x:%x:%x]",xMessage.pucPayload[0],xMessage.pucPayload[1],xMessage.pucPayload[2],xMessage.pucPayload[3],xMessage.pucPayload[4],xMessage.pucPayload[5],xMessage.pucPayload[6]);
         xHCIComms.fnReceiveHandler( &xHCIComms, &xMessage );

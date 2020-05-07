@@ -22,6 +22,7 @@
 
 #define HCI_PACKET_TYPE_REQUEST             0x01
 #define HCI_PACKET_TYPE_RESPONSE            0x02
+#define HCI_PACKET_TYPE_CONTINUOUS          0x03
 
 #define HCI_PACKET_FIELD_TYPE_REQUEST_WITH_LENGTH(length_8_bits)   ((HCI_PACKET_TYPE_REQUEST & 0x0F) | ((0x0F & length_8_bits) << 4))
 #define HCI_PACKET_FIELD_TYPE_RESPONSE_WITH_LENGTH(length_8_bits)   ((HCI_PACKET_TYPE_RESPONSE & 0x0F) | ((0x0F & length_8_bits) << 4))
