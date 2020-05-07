@@ -49,7 +49,6 @@ static TaskHandle_t xTaskHCIReadOsHandle;
 static SemaphoreHandle_t s4527438QueueHCIWritePacketSend = NULL;
 static SemaphoreHandle_t s4527438QueueHCIReadPacketSend = NULL;
 static SemaphoreHandle_t s4527438QueueHCIReadInternalCommandPacketSend = NULL;
-static SemaphoreHandle_t s4527438QueueHCIReadSemaphore = NULL;
 
 static QueueSetHandle_t xHCIWriteQueueSet;
 //static QueueSetHandle_t xHCIReadQueueSet;
@@ -82,7 +81,6 @@ void s4527438_os_hci_init(void) {
     xHCIWriteQueueSet = xQueueCreateSet(QUEUE_LENGTH);
     xQueueAddToSet(s4527438QueueHCIWritePacketSend, xHCIWriteQueueSet);
 
-    vSemaphoreCreateBinary( s4527438QueueHCIReadSemaphore );
     s4527438QueueHCIReadInternalCommandPacketSend = xQueueCreate(QUEUE_LENGTH, sizeof(struct xHCIReceiveRoute_t));
     s4527438QueueHCIReadPacketSend = xQueueCreate(QUEUE_LENGTH, sizeof(struct xHCICommsMessage_t));
     //xHCIReadQueueSet = xQueueCreateSet(QUEUE_LENGTH);
@@ -224,10 +222,13 @@ static void HCIWriteTask( void ) {
 }
 
 #define STATE_WAIT_NEW_RESPONSE 0
-#define STATE_READY_RECEIVE_DATA_PACKET 2
+#define STATE_READY_RECEIVE_INTERNAL_CMD_PACKET 1
+#define STATE_READY_PROCESS_DATA_PACKET 2
+#define STATE_READY_PROCESS_CONTINUOUS_DATA_PACKET 3
 static void HCIReadTask( void ) {
     xHCIReceiveRoute_t pxHCIRoute;
     QueueSetMemberHandle_t xActivatedMember;
+    xHCICommsMessage_t pxDataMessage;
     uint8_t read_task_state = STATE_WAIT_NEW_RESPONSE;
 
     uint8_t word_size = 0;
@@ -235,11 +236,23 @@ static void HCIReadTask( void ) {
     for (;;) {
 
         if(read_task_state == STATE_WAIT_NEW_RESPONSE) {
+            // Wait block
+            xQueueReceive( s4527438QueueHCIReadPacketSend, &pxDataMessage,  portMAX_DELAY);
+            if( pxDataMessage.usPayloadLen == 0 ) {
+                read_task_state = STATE_WAIT_NEW_RESPONSE;
+                continue;
+            }
+            if( pxDataMessage.ucPayloadType == HCI_TYPE_RESPONSE ) {
+                read_task_state = STATE_READY_RECEIVE_INTERNAL_CMD_PACKET;
+            } else if( pxDataMessage.ucPayloadType == HCI_TYPE_CONTINUOUS ) {
+                read_task_state = STATE_READY_PROCESS_CONTINUOUS_DATA_PACKET;
+            }
+        } 
+
+        if(read_task_state == STATE_READY_RECEIVE_INTERNAL_CMD_PACKET) {
             word_size = 0;
             num_word = 0;
-            // Wait block
-            xSemaphoreTake(s4527438QueueHCIReadSemaphore,portMAX_DELAY);
-            read_task_state = STATE_READY_RECEIVE_DATA_PACKET;
+            read_task_state = STATE_READY_PROCESS_DATA_PACKET;
 
             // Get Packet Internal Header for word size info
             xQueueReceive( s4527438QueueHCIReadInternalCommandPacketSend, &pxHCIRoute, 0 );
@@ -247,17 +260,9 @@ static void HCIReadTask( void ) {
             num_word = HCI_PACKET_DATA_HIGH_GET_NUM_WORD(pxHCIRoute.usPayloadWordInfo);
         } 
 
-        if(read_task_state == STATE_READY_RECEIVE_DATA_PACKET) {
-            xHCICommsMessage_t pxDataMessage;
+        if(read_task_state == STATE_READY_PROCESS_DATA_PACKET) {
             xBLETdfMessage_t *tdfRoute = NULL;
-            /* Receive item */
-            xQueueReceive( s4527438QueueHCIReadPacketSend, &pxDataMessage, 0 );
             int i = 0,j = 0;
-
-            if( pxDataMessage.usPayloadLen == 0 ) {
-                read_task_state = STATE_WAIT_NEW_RESPONSE;
-                continue;
-            }
 
             /* DO two queue sync first */
             while(1) {
@@ -303,6 +308,26 @@ static void HCIReadTask( void ) {
             }
             read_task_state = STATE_WAIT_NEW_RESPONSE;
         }
+
+        if(read_task_state == STATE_READY_PROCESS_CONTINUOUS_DATA_PACKET) {
+            xBLETdfMessage_t tdfRoute = {0x00};
+            int i = 0,j = 0;
+
+            // NOTE : The first byte is SID value
+            tdfRoute.usTdfIndex = 0;
+            tdfRoute.usHCIMapSID = pxDataMessage.pucPayload[0];
+            tdfRoute.usTdfReceivedValueLength = pxDataMessage.usPayloadLen - 1;
+            tdfRoute.usI2CRegValue = 'c';
+            if( (pxDataMessage.usPayloadLen - 1) > sizeof(tdfRoute.usReceivedValue) ) {
+                s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[HCI Event]: %d exceed the tdfRoute buffer ",(pxDataMessage.usPayloadLen - 1));
+                read_task_state = STATE_WAIT_NEW_RESPONSE;
+                continue;
+            }else {
+                pvMemcpy(tdfRoute.usReceivedValue,&(pxDataMessage.pucPayload[1]),(pxDataMessage.usPayloadLen - 1));
+            }
+            s4527438_os_ble_tdf_result_cmd(&tdfRoute);
+            read_task_state = STATE_WAIT_NEW_RESPONSE;
+        }
         /* Delay for 10ms */
         vTaskDelay(10);
     }
@@ -316,6 +341,5 @@ static void vCustomSerialHandler(xHCICommsInterface_t *pxComms,
     if (s4527438QueueHCIReadPacketSend != NULL) { /* Check if queue exists */
         xQueueSend(s4527438QueueHCIReadPacketSend, ( void * ) pxMessage, ( portTickType ) 0 );
     }
-    xSemaphoreGive(s4527438QueueHCIReadSemaphore);
     return;
 }

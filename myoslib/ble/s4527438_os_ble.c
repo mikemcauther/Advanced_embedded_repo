@@ -84,7 +84,7 @@
 
 
 
-#define BLE_TDF_472_SID             2
+#define BLE_TDF_472_SID             1
 
 #define BLE_TDF_472_FIELD_ROLL_REG_VALUE    'r'
 #define BLE_TDF_472_FIELD_ROLL_NUM_WORD     1
@@ -133,6 +133,7 @@ static void handle_tdf_472(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_476(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_475(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_474(xBLETdfMessage_t* tdfInfo);
+static void handle_continuous_mode(xBLETdfMessage_t* tdfInfo);
 
 void s4527438_os_ble_init(void) {
 
@@ -215,6 +216,9 @@ static void BLETdfHandlerTask( void ) {
                 case 474:
                     handle_tdf_474(&tdfInfo);
                     break;
+                default:
+                    handle_continuous_mode(&tdfInfo);
+                    break;
             }
 	        eTdfFlushMulti(BLE_LOG);
         }
@@ -260,4 +264,27 @@ static void handle_tdf_475(xBLETdfMessage_t* tdfInfo)
 
 static void handle_tdf_474(xBLETdfMessage_t* tdfInfo)
 {
+}
+static void handle_continuous_mode(xBLETdfMessage_t* tdfInfo) {
+    switch(tdfInfo->usHCIMapSID)
+    {
+        /* pressure / temperature */
+        case BLE_TDF_342_SID:
+            handle_tdf_342(tdfInfo);
+            break;
+        
+        /* NOTE : 471 do not need continuous mode 
+        case BLE_TDF_471_SID:
+            handle_tdf_471(tdfInfo);
+            break;
+        */
+        case BLE_TDF_472_SID:
+            handle_tdf_472(tdfInfo);
+            break;
+        case BLE_TDF_475_SID:
+            handle_tdf_475(tdfInfo);
+            break;
+        default:
+            break;
+    }
 }
