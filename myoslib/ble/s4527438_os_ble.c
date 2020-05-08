@@ -106,7 +106,7 @@
 #define BLE_TDF_472_FIELD_READY_MASK        (0x00 | BLE_TDF_472_FIELD_ROLL_READY_BIT | BLE_TDF_472_FIELD_PITCH_READY_BIT | BLE_TDF_472_FIELD_YAW_READY_BIT)
 
 
-#define BLE_TDF_475_SID             4
+#define BLE_TDF_475_SID                     6
     
 #define BLE_TDF_475_FIELD_RANGE_REG_VALUE   'r'
 #define BLE_TDF_475_FIELD_RANGE_NUM_WORD    1
@@ -132,7 +132,7 @@ static void handle_tdf_471(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_241(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_472(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_t mode_state);
 static void handle_tdf_476(xBLETdfMessage_t* tdfInfo);
-static void handle_tdf_475(xBLETdfMessage_t* tdfInfo);
+static void handle_tdf_475(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_t mode_state);
 static void handle_tdf_474(xBLETdfMessage_t* tdfInfo);
 static void handle_continuous_mode(xBLETdfMessage_t* tdfInfo,uint16_t tdfId,eBLETdfContinuousModeState_t mode_state);
 static uint8_t tdfId_map_to_sid(uint16_t tdfId);
@@ -305,7 +305,7 @@ static void handle_tdf_241(xBLETdfMessage_t* tdfInfo)
 static void handle_tdf_472(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_t mode_state)
 {
     static tdf_3d_pose_t tdf_3d_pose_obj = {0x00};
-    static received_data_number = 0;
+    static uint8_t received_data_number = 0;
     static uint8_t is_started = 0;
 	xTdfTime_t xTime;
 
@@ -429,8 +429,53 @@ static void handle_tdf_476(xBLETdfMessage_t* tdfInfo)
 {
 }
 
-static void handle_tdf_475(xBLETdfMessage_t* tdfInfo)
+static void handle_tdf_475(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_t mode_state)
 {
+    static tdf_range_mm_t tdf_range_mm_obj = {0x00};
+    static uint8_t received_data_number = 0;
+    static uint8_t is_started = 0;
+	xTdfTime_t xTime;
+
+    static uint32_t     pulEpochTime = 0;
+
+
+    s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] handle_tdf_475 mode_state = <%d>  ",mode_state);
+    if( mode_state == BLE_TDF_CONTINUOUS_START ) {
+        received_data_number = 0;
+        memset(&tdf_range_mm_obj,0x00,sizeof(tdf_range_mm_t));
+        is_started = 1;
+        bRtcGetEpochTime( eUnixEpoch, &pulEpochTime );
+    }
+
+    if( mode_state == BLE_TDF_CONTINUOUS_DATA_INCOMING && is_started == 1 && (tdfInfo != NULL) ) {
+        // Discard the first packet
+        if( received_data_number == 0 ) {
+            received_data_number ++;
+            return;
+        }
+        received_data_number ++;
+
+        uint16_t range_mm_data = 0;
+        // range
+        range_mm_data = (tdfInfo->usReceivedValue[0] | (tdfInfo->usReceivedValue[1] << 8)); 
+
+        tdf_range_mm_obj.range = range_mm_data; 
+
+	    bRtcGetTdfTime( &xTime );
+	    eTdfAddMulti(BLE_LOG, TDF_3D_POSE, TDF_TIMESTAMP_NONE, &xTime, &tdf_range_mm_obj);
+	    eTdfFlushMulti(BLE_LOG);
+
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[BLE Event] tdf_range_mm_obj.range  = [%d]",tdf_range_mm_obj.range);
+    }
+
+    if( mode_state == BLE_TDF_CONTINUOUS_STOP ) {
+	    //xTdfTime_t xTime;
+	    //bRtcGetTdfTime( &xTime );
+
+	    //eTdfAddMulti(BLE_LOG, TDF_3D_POSE, TDF_TIMESTAMP_NONE, NULL, &tdf_3d_pose_obj);
+	    //eTdfFlushMulti(BLE_LOG);
+        is_started = 0;
+    }
 }
 
 static void handle_tdf_474(xBLETdfMessage_t* tdfInfo)
@@ -455,7 +500,7 @@ static void handle_continuous_mode(xBLETdfMessage_t* tdfInfo,uint16_t tdfId,eBLE
                 handle_tdf_472(tdfInfo,mode_state);
                 break;
             case BLE_TDF_475_SID:
-                handle_tdf_475(tdfInfo);
+                handle_tdf_475(tdfInfo,mode_state);
                 break;
             default:
                 break;
@@ -464,12 +509,12 @@ static void handle_continuous_mode(xBLETdfMessage_t* tdfInfo,uint16_t tdfId,eBLE
         switch(tdfId){
                 /* pressure / temperature */
                 case 342:
-                    handle_tdf_342(&tdfInfo);
+                    handle_tdf_342(tdfInfo);
                     break;
 
                 /* xyz gyro-xyz */
                 case 471:
-                    handle_tdf_471(&tdfInfo);
+                    handle_tdf_471(tdfInfo);
                     break;
 
                 /* Uptime */
@@ -483,17 +528,17 @@ static void handle_continuous_mode(xBLETdfMessage_t* tdfInfo,uint16_t tdfId,eBLE
 
                 /* height */
                 case 476:
-                    handle_tdf_476(&tdfInfo);
+                    handle_tdf_476(tdfInfo);
                     break;
 
                 /* range */
                 case 475:
-                    handle_tdf_475(&tdfInfo);
+                    handle_tdf_475(tdfInfo,mode_state);
                     break;
 
                 /* angle */
                 case 474:
-                    handle_tdf_474(&tdfInfo);
+                    handle_tdf_474(tdfInfo);
                     break;
                 default:
                     break;

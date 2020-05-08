@@ -1,10 +1,11 @@
 import pyb
 from pyb import UART
 from machine import I2C
+from hcsr04 import HCSR04
                                                     
 class I2C_SENSOR():
 
-    def __init__(self,payload,payload_len,i2c_obj):
+    def __init__(self,payload,payload_len,i2c_obj,hcsr04_obj):
         self.I2C_IDX = 0
         self.I2C_ADDR_IDX = 1
         self.I2C_REG_ADDR = 2
@@ -22,6 +23,7 @@ class I2C_SENSOR():
 
         self._is_write = ((~((payload[self.I2C_ADDR_IDX] & self.I2C_ADDR_LOW_1_MASK))) & self.I2C_ADDR_LOW_1_MASK)
         self._i2c_obj = i2c_obj
+        self._hcsr04_obj = hcsr04_obj
 
         self._buf = bytearray([0x00])
 
@@ -65,15 +67,15 @@ class I2C_SENSOR():
             self._i2c_obj.writeto_mem(self._i2c_address, self._reg_addr, self._buf, addrsize=8)
             self._replay_packet_size = 0
         else:
+            if self._reg_value == ord('c'):
+                self.is_packet_continuous_cmd = 1
+                self.is_continuous_on = 1
+                return
+            if self._reg_value == ord('p'):
+                self.is_packet_continuous_cmd = 1
+                self.is_continuous_on = 0
+                return
             if self._i2c_address == self.LSM6DSL_ADDR:
-                if self._reg_value == ord('c'):
-                    self.is_packet_continuous_cmd = 1
-                    self.is_continuous_on = 1
-                    return
-                if self._reg_value == ord('p'):
-                    self.is_packet_continuous_cmd = 1
-                    self.is_continuous_on = 0
-                    return
                 if self._reg_value == ord('a'):
                     self.sid_1_lsm6dsl_i2c_read_all()
                     return
@@ -132,6 +134,15 @@ class I2C_SENSOR():
         # LSM6DSL
         if self.sid == 1:
             self.sid_1_lsm6dsl_i2c_read_all()
+            return
+        # HCSR04
+        if self.sid == 6:
+            result = self._hcsr04_obj.distance_mm()
+            
+            self._replay_packet_buffer[0] = ((result >> 0) & 0xff )
+
+            self._replay_packet_buffer[1] = ((result >> 8) & 0xff )
+            self._replay_packet_size = 2
             return
 
     def sid_1_lsm6dsl_i2c_read_all(self):
@@ -296,6 +307,7 @@ class HCI_UART(UART):
         self.init(115200, bits=8, parity=None, stop=1)
 
         self._i2c = I2C(2,freq=400000)
+        self._hcsr04 = HCSR04('PB2', 'PA4')
 
         self.HCI_HEADER = 0xAA
         self.HCI_TYPE_REQUEST = 0x01
@@ -330,7 +342,7 @@ class HCI_UART(UART):
                         self._payload = self.read(self._payload_size)
 
                         # Execute I2C
-                        temp_i2c = I2C_SENSOR(self._payload,self._payload_size,self._i2c)
+                        temp_i2c = I2C_SENSOR(self._payload,self._payload_size,self._i2c,self._hcsr04)
                         temp_i2c.self_string()
                         
                         if temp_i2c.is_packet_continuous_cmd == 1:
@@ -392,8 +404,7 @@ class HCI_UART(UART):
             self._is_timer_start = 0
 
     def timer_call_back(self):
-        self.continuous_mode_manager_by_sid[1].self_string()
-        for index in range(1,6):
+        for index in range(1,7):
             if not index in self.continuous_mode_manager_by_sid:
                 continue
             i2c_obj = self.continuous_mode_manager_by_sid[index]
