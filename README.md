@@ -222,11 +222,17 @@
 
     - ```
       ble c 241
+      ```
+      
+    - ```
       ble c 471
+      ```
+      
+    - ```
+      ble s o
       ```
 
     - ```
-      ble s o
       ble s f
       ```
 
@@ -246,7 +252,22 @@
 
 - ##### Part 2B AHU Altitude Calculation
 
-  - 
+  - Test Command:
+
+    - Under EAPL
+
+    - ```
+      from hcsr04 import HCSR04
+      ```
+
+    - ```
+      hcsr04 = HCSR04('PB2', 'PA4')
+      ```
+
+    - ```
+      hcsr04.distance_mm()
+      ```
+
   - (Only Ultrasonic Ranger)
 
 - ##### Part 3B AHU Orientation and Altitude Transfer
