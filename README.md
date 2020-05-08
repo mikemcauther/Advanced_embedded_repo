@@ -247,11 +247,11 @@
 - ##### Part 2B AHU Altitude Calculation
 
   - 
-  - (Not Yet)
+  - (Only Ultrasonic Ranger)
 
 - ##### Part 3B AHU Orientation and Altitude Transfer
 
-  - (Only Orientation)
+  - (Only Orientation and tdf 475)
 
 - ##### PART C Tasks - Data Viewer Dashboard Interface
 
@@ -293,57 +293,7 @@
 
 ​    [2] LSM6DSL register value: https://github.com/hanyazou/nuttx/blob/8e18e8ae54f7faeb4712b615dea59f4a89bdedf2/include/nuttx/sensors/lsm6dsl.h
 
-   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-[Go to Real Cool Heading section](#real-cool-heading)
+​    [3] HCSR04: https://github.com/rsc1975/micropython-hcsr04/blob/master/hcsr04.py
 
 
 
