@@ -8,15 +8,14 @@
 
  
 
-[TOC]
-
-​	
 
 ### Pracs: 
 
-​	[Prac1](#### Prac1) (2020/04/03)
+​	[Prac1](./README.md# prac1) (2020/04/03)
 
-​	[Prac2](#### Prac2) (2020/04/24)
+​	[Prac2](./README.md#--prac2--2020-04-24-)
+
+​	[Prac3](./README.md#-prac3--2020-05-08-)
 
 ### Folder Structure:
 
@@ -215,7 +214,78 @@
 
       
 
+#### Prac3 (2020/05/08)
 
+- ##### Design Task 1A: AHU Bluetooth Data Transfer
+
+  - ###### Test Command:
+
+    - ```
+      ble c 241
+      ble c 471
+      ```
+
+    - ```
+      ble s o
+      ble s f
+      ```
+
+      
+
+  - (Done)
+
+- ##### Part 1B AHU Orientation Calculation
+
+  - Test Action: 
+    - Step1 : baselisten --serial /dev/ttyACM0
+    - Step2 : User press AHU "Mode" push button
+    - Step3: The current roll/pitch/yaw value of SCU will be displayed on the terminal
+    - Step4: User can change the orientation(roll/pitch/yaw) of SCU board to see the value changing on terminal.
+    - Step5: User can press "Mode" push button again to stop calculation.
+  - (Done)
+
+- ##### Part 2B AHU Altitude Calculation
+
+  - 
+  - (Not Yet)
+
+- ##### Part 3B AHU Orientation and Altitude Transfer
+
+  - (Only Orientation)
+
+- ##### PART C Tasks - Data Viewer Dashboard Interface
+
+  - (Not Yet)
+
+- ##### Foler Structer View
+
+  - root/
+    - common/
+    - ei-changes/
+    - myoslib/
+      - ble/
+        - s4527438_cli_ble.c
+        - s4527438_cli_ble.h
+        - s4527438_os_ble.c
+        - s4527438_os_ble.h
+      - hci/
+        - s4527438_cli_hci.c
+        - s4527438_cli_hci.h
+        - s4527438_hal_hci.c
+        - s4527438_hal_hci.h
+        - s4527438_hci_packet.h
+        - s4527438_os_hci.c
+        - s4527438_os_hci.h
+      - scu/
+        - hci.py
+        - led.py
+        - main.py
+    - pracs/
+      - prac3/
+        - inc/
+        - src/
+          - prac3.c
+        - Makefile
 
 ### Reference List:
 
