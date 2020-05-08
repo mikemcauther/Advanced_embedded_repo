@@ -242,10 +242,12 @@ static void BLETdfHandlerTask( void ) {
             xQueueReceive( s4527438QueueBLETdfPacketSend, &tdfInfo, 0 );
             switch(tdfInfo.usTdfIndex)
             {
-                /* pressure / temperature */
-                case 342:
                 /* xyz gyro-xyz */
                 case 471:
+                    handle_tdf_471(&tdfInfo);
+                    break;
+                /* pressure / temperature */
+                case 342:
                 /* Uptime */
                 case 241:
                 /* 3D orientation */
@@ -297,6 +299,7 @@ static void handle_tdf_241(xBLETdfMessage_t* tdfInfo)
 
 	xUptime.uptime = pulEpochTime;
 	eTdfAddMulti(BLE_LOG, TDF_UPTIME, TDF_TIMESTAMP_NONE, NULL, &xUptime);
+	eTdfFlushMulti(BLE_LOG);
 }
 
 static void handle_tdf_472(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_t mode_state)
@@ -304,12 +307,17 @@ static void handle_tdf_472(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_
     static tdf_3d_pose_t tdf_3d_pose_obj = {0x00};
     static received_data_number = 0;
     static uint8_t is_started = 0;
+	xTdfTime_t xTime;
+
+    static uint32_t     pulEpochTime = 0;
+
 
     s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] handle_tdf_472 mode_state = <%d>  ",mode_state);
     if( mode_state == BLE_TDF_CONTINUOUS_START ) {
         received_data_number = 0;
         memset(&tdf_3d_pose_obj,0x00,sizeof(tdf_3d_pose_t));
         is_started = 1;
+        bRtcGetEpochTime( eUnixEpoch, &pulEpochTime );
     }
 
     if( mode_state == BLE_TDF_CONTINUOUS_DATA_INCOMING && is_started == 1 && (tdfInfo != NULL) ) {
@@ -340,7 +348,8 @@ static void handle_tdf_472(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_
         s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] x_g_data = <%d>  ",x_g_data);
 
         temp_result = x_g_data;
-        temp_result = temp_result * FS_TYPO / FS_TYPO_decimal;
+        //temp_result = temp_result * FS_TYPO / FS_TYPO_decimal;
+        temp_result = temp_result * FS_TYPO ;
         temp_result = temp_result / total_decimal;
         temp_result = temp_result * ms_100 / ms_decimal;
 
@@ -363,7 +372,8 @@ static void handle_tdf_472(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_
         s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] y_g_data = <%d>  ",y_g_data);
 
         temp_result = y_g_data;
-        temp_result = temp_result * FS_TYPO / FS_TYPO_decimal;
+        //temp_result = temp_result * FS_TYPO / FS_TYPO_decimal;
+        temp_result = temp_result * FS_TYPO ;
         temp_result = temp_result / total_decimal;
         temp_result = temp_result * ms_100 / ms_decimal;
 
@@ -384,7 +394,8 @@ static void handle_tdf_472(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_
         }
 
         temp_result = z_g_data;
-        temp_result = temp_result * FS_TYPO / FS_TYPO_decimal;
+        //temp_result = temp_result * FS_TYPO / FS_TYPO_decimal;
+        temp_result = temp_result * FS_TYPO ;
         temp_result = temp_result / total_decimal;
         temp_result = temp_result * ms_100 / ms_decimal;
 
@@ -394,14 +405,21 @@ static void handle_tdf_472(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_
             tdf_3d_pose_obj.yaw += (temp_result);
         }
 
-        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[BLE Event] tdf_3d_pose_obj.pitch  = [%d]",tdf_3d_pose_obj.pitch);
-        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[BLE Event] tdf_3d_pose_obj.roll  = [%d]",tdf_3d_pose_obj.roll);
-        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[BLE Event] tdf_3d_pose_obj.yaw  = [%d]",tdf_3d_pose_obj.yaw);
+	    bRtcGetTdfTime( &xTime );
+	    eTdfAddMulti(BLE_LOG, TDF_3D_POSE, TDF_TIMESTAMP_NONE, &xTime, &tdf_3d_pose_obj);
+	    eTdfFlushMulti(BLE_LOG);
+
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[BLE Event] tdf_3d_pose_obj.pitch  = [%d]",tdf_3d_pose_obj.pitch/100);
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[BLE Event] tdf_3d_pose_obj.roll  = [%d]",tdf_3d_pose_obj.roll/100);
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[BLE Event] tdf_3d_pose_obj.yaw  = [%d]",tdf_3d_pose_obj.yaw/100);
     }
 
     if( mode_state == BLE_TDF_CONTINUOUS_STOP ) {
-	    eTdfAddMulti(BLE_LOG, TDF_3D_POSE, TDF_TIMESTAMP_NONE, NULL, &tdf_3d_pose_obj);
-	    eTdfFlushMulti(BLE_LOG);
+	    //xTdfTime_t xTime;
+	    //bRtcGetTdfTime( &xTime );
+
+	    //eTdfAddMulti(BLE_LOG, TDF_3D_POSE, TDF_TIMESTAMP_NONE, NULL, &tdf_3d_pose_obj);
+	    //eTdfFlushMulti(BLE_LOG);
         is_started = 0;
     }
     
