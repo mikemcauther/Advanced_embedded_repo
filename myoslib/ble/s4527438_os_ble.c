@@ -129,11 +129,11 @@ static void BLETdfHandlerTask( void );
 static void handle_tdf_342(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_471(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_241(xBLETdfMessage_t* tdfInfo);
-static void handle_tdf_472(xBLETdfMessage_t* tdfInfo);
+static void handle_tdf_472(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_t mode_state);
 static void handle_tdf_476(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_475(xBLETdfMessage_t* tdfInfo);
 static void handle_tdf_474(xBLETdfMessage_t* tdfInfo);
-static void handle_continuous_mode(xBLETdfMessage_t* tdfInfo);
+static void handle_continuous_mode(xBLETdfMessage_t* tdfInfo,uint16_t tdfId,eBLETdfContinuousModeState_t mode_state);
 static uint8_t tdfId_map_to_sid(uint16_t tdfId);
 
 void s4527438_os_ble_init(void) {
@@ -174,8 +174,10 @@ void s4527438_os_ble_tdf_result_cmd(xBLETdfMessage_t *tdfInfo) {
 void s4527438_os_ble_tdf_continuous_mode(uint16_t tdfId,eBLETdfContinuousModeState_t mode_state) {
     uint8_t sid = tdfId_map_to_sid(tdfId);
     if( mode_state == BLE_TDF_CONTINUOUS_START ) {
+        handle_continuous_mode(NULL,tdfId,BLE_TDF_CONTINUOUS_START);
         s4527438_os_hci_read_reg_cmd(sid, 0x00, 'c',0,0);
     } else if(mode_state == BLE_TDF_CONTINUOUS_STOP) {
+        handle_continuous_mode(NULL,tdfId,BLE_TDF_CONTINUOUS_STOP);
         s4527438_os_hci_read_reg_cmd(sid, 0x00, 'p',0,0);
     }
 }
@@ -237,39 +239,22 @@ static void BLETdfHandlerTask( void ) {
             {
                 /* pressure / temperature */
                 case 342:
-                    handle_tdf_342(&tdfInfo);
-                    break;
-
                 /* xyz gyro-xyz */
                 case 471:
-                    handle_tdf_471(&tdfInfo);
-                    break;
-
                 /* Uptime */
                 case 241:
-                    break;
-
                 /* 3D orientation */
                 case 472:
-                    handle_tdf_472(&tdfInfo);
-                    break;
-
                 /* height */
                 case 476:
-                    handle_tdf_476(&tdfInfo);
-                    break;
-
                 /* range */
                 case 475:
-                    handle_tdf_475(&tdfInfo);
-                    break;
-
                 /* angle */
                 case 474:
-                    handle_tdf_474(&tdfInfo);
+                    handle_continuous_mode(&tdfInfo,tdfInfo.usTdfIndex,BLE_TDF_CONTINUOUS_NO_ACTION);
                     break;
                 default:
-                    handle_continuous_mode(&tdfInfo);
+                    handle_continuous_mode(&tdfInfo,tdfInfo.usTdfIndex,BLE_TDF_CONTINUOUS_DATA_INCOMING);
                     break;
             }
 	        eTdfFlushMulti(BLE_LOG);
@@ -302,8 +287,112 @@ static void handle_tdf_241(xBLETdfMessage_t* tdfInfo)
 {
 }
 
-static void handle_tdf_472(xBLETdfMessage_t* tdfInfo)
+static void handle_tdf_472(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_t mode_state)
 {
+    static tdf_3d_pose_t tdf_3d_pose_obj = {0x00};
+    static received_data_number = 0;
+    static uint8_t is_started = 0;
+
+    s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] handle_tdf_472 mode_state = <%d>  ",mode_state);
+    if( mode_state == BLE_TDF_CONTINUOUS_START ) {
+        received_data_number = 0;
+        memset(&tdf_3d_pose_obj,0x00,sizeof(tdf_3d_pose_t));
+        is_started = 1;
+    }
+
+    if( mode_state == BLE_TDF_CONTINUOUS_DATA_INCOMING && is_started == 1 && (tdfInfo != NULL) ) {
+        // Discard the first packet
+        if( received_data_number == 0 ) {
+            received_data_number ++;
+            return;
+        }
+        received_data_number ++;
+
+        uint16_t FS_TYPO = 875, FS_TYPO_decimal = 100;
+        uint16_t total_decimal = 1000;
+        uint16_t ms_100 = 100, ms_decimal = 1000;
+        uint16_t negative_mask = 0x8000,is_negative = 0, negative_abs_mask = 0xFFFF;
+        uint32_t temp_result = 0, temp_result_decimal = 0;
+
+        uint16_t x_g_data = 0, y_g_data = 0, z_g_data = 0;
+        uint16_t x_ang_speed = 0, y_ang_speed = 0, z_ang_speed = 0;
+        uint16_t x_ang_diff = 0, y_ang_diff = 0, z_ang_diff = 0;
+
+        // x => pitch
+        x_g_data = (tdfInfo->usReceivedValue[6] | (tdfInfo->usReceivedValue[7] << 8)); 
+        if( negative_mask & x_g_data ) {
+            is_negative = 1;
+            x_g_data = (negative_abs_mask ^ x_g_data) + 1;
+            s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] x_g_data negative ");
+        } 
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] x_g_data = <%d>  ",x_g_data);
+
+        temp_result = x_g_data;
+        temp_result = temp_result * FS_TYPO / FS_TYPO_decimal;
+        temp_result = temp_result / total_decimal;
+        temp_result = temp_result * ms_100 / ms_decimal;
+
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] temp_result = <%d>  ",temp_result);
+
+        if( is_negative == 1){
+            tdf_3d_pose_obj.pitch -= (temp_result );
+        } else {
+            tdf_3d_pose_obj.pitch += (temp_result );
+        }
+
+        // y => roll
+        y_g_data = (tdfInfo->usReceivedValue[8] | (tdfInfo->usReceivedValue[9] << 8));
+
+        if( negative_mask & y_g_data ) {
+            is_negative = 1;
+            y_g_data = (negative_abs_mask ^  y_g_data) + 1;
+            s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] y_g_data negative ");
+        }
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] y_g_data = <%d>  ",y_g_data);
+
+        temp_result = y_g_data;
+        temp_result = temp_result * FS_TYPO / FS_TYPO_decimal;
+        temp_result = temp_result / total_decimal;
+        temp_result = temp_result * ms_100 / ms_decimal;
+
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] temp_result = <%d>  ",temp_result);
+
+        if( is_negative == 1){
+            tdf_3d_pose_obj.roll -= (temp_result);
+        } else {
+            tdf_3d_pose_obj.roll += (temp_result);
+        }
+
+        // z => yaw
+        z_g_data = (tdfInfo->usReceivedValue[10] | (tdfInfo->usReceivedValue[11] << 8));
+        if( negative_mask & z_g_data ) {
+            is_negative = 1;
+            z_g_data = (negative_abs_mask ^ z_g_data) + 1;
+            s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] z_g_data negative ");
+        }
+
+        temp_result = z_g_data;
+        temp_result = temp_result * FS_TYPO / FS_TYPO_decimal;
+        temp_result = temp_result / total_decimal;
+        temp_result = temp_result * ms_100 / ms_decimal;
+
+        if( is_negative == 1){
+            tdf_3d_pose_obj.yaw -= (temp_result);
+        } else {
+            tdf_3d_pose_obj.yaw += (temp_result);
+        }
+
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[BLE Event] tdf_3d_pose_obj.pitch  = [%d]",tdf_3d_pose_obj.pitch);
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[BLE Event] tdf_3d_pose_obj.roll  = [%d]",tdf_3d_pose_obj.roll);
+        s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_ERROR,"[BLE Event] tdf_3d_pose_obj.yaw  = [%d]",tdf_3d_pose_obj.yaw);
+    }
+
+    if( mode_state == BLE_TDF_CONTINUOUS_STOP ) {
+	    eTdfAddMulti(BLE_LOG, TDF_3D_POSE, TDF_TIMESTAMP_NONE, NULL, &tdf_3d_pose_obj);
+	    eTdfFlushMulti(BLE_LOG);
+        is_started = 0;
+    }
+    
 }
 
 static void handle_tdf_476(xBLETdfMessage_t* tdfInfo)
@@ -317,26 +406,67 @@ static void handle_tdf_475(xBLETdfMessage_t* tdfInfo)
 static void handle_tdf_474(xBLETdfMessage_t* tdfInfo)
 {
 }
-static void handle_continuous_mode(xBLETdfMessage_t* tdfInfo) {
-    switch(tdfInfo->usHCIMapSID)
-    {
-        /* pressure / temperature */
-        case BLE_TDF_342_SID:
-            handle_tdf_342(tdfInfo);
-            break;
+static void handle_continuous_mode(xBLETdfMessage_t* tdfInfo,uint16_t tdfId,eBLETdfContinuousModeState_t mode_state) {
+    s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[BLE Event] tdfInfo->usHCIMapSID = <%d>  ",tdfInfo->usHCIMapSID);
+    if( tdfInfo != NULL ) {
+        switch(tdfInfo->usHCIMapSID)
+        {
+            /* pressure / temperature */
+            case BLE_TDF_342_SID:
+                handle_tdf_342(tdfInfo);
+                break;
         
-        /* NOTE : 471 do not need continuous mode 
-        case BLE_TDF_471_SID:
-            handle_tdf_471(tdfInfo);
-            break;
-        */
-        case BLE_TDF_472_SID:
-            handle_tdf_472(tdfInfo);
-            break;
-        case BLE_TDF_475_SID:
-            handle_tdf_475(tdfInfo);
-            break;
-        default:
-            break;
+            /* NOTE : 471 do not need continuous mode 
+            case BLE_TDF_471_SID:
+                handle_tdf_471(tdfInfo);
+                break;
+            */
+            case BLE_TDF_472_SID:
+                handle_tdf_472(tdfInfo,mode_state);
+                break;
+            case BLE_TDF_475_SID:
+                handle_tdf_475(tdfInfo);
+                break;
+            default:
+                break;
+        }
+    } else {
+        switch(tdfId){
+                /* pressure / temperature */
+                case 342:
+                    handle_tdf_342(&tdfInfo);
+                    break;
+
+                /* xyz gyro-xyz */
+                case 471:
+                    handle_tdf_471(&tdfInfo);
+                    break;
+
+                /* Uptime */
+                case 241:
+                    break;
+
+                /* 3D orientation */
+                case 472:
+                    handle_tdf_472(NULL,mode_state);
+                    break;
+
+                /* height */
+                case 476:
+                    handle_tdf_476(&tdfInfo);
+                    break;
+
+                /* range */
+                case 475:
+                    handle_tdf_475(&tdfInfo);
+                    break;
+
+                /* angle */
+                case 474:
+                    handle_tdf_474(&tdfInfo);
+                    break;
+                default:
+                    break;
+        }
     }
 }

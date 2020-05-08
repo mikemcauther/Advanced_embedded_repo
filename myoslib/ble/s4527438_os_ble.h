@@ -29,7 +29,9 @@ typedef struct xBLETdfMessage_t
 
 typedef enum eBLETdfContinuousModeState_t {
     BLE_TDF_CONTINUOUS_STOP = 0,
-    BLE_TDF_CONTINUOUS_START = 1
+    BLE_TDF_CONTINUOUS_START = 1,
+    BLE_TDF_CONTINUOUS_NO_ACTION = 2,
+    BLE_TDF_CONTINUOUS_DATA_INCOMING = 4
 } eBLETdfContinuousModeState_t;
 
 void s4527438_os_ble_init(void);
