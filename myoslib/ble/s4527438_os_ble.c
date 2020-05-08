@@ -29,6 +29,7 @@
 
 #include "tdf.h"
 #include "log.h"
+#include "rtc.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -148,6 +149,10 @@ void s4527438_os_ble_init(void) {
 
 void s4527438_os_ble_tdf_get_sensor_value_cmd(uint16_t tdfId) {
     switch(tdfId){
+        case 241:
+            /* Output Directly */
+            handle_tdf_241(NULL);
+            break;
         case 471:
             {
                 xBLETdfMessage_t tdfInfo = {
@@ -285,6 +290,13 @@ static void handle_tdf_471(xBLETdfMessage_t* tdfInfo)
 
 static void handle_tdf_241(xBLETdfMessage_t* tdfInfo)
 {
+	tdf_uptime_t xUptime;
+    uint32_t     pulEpochTime = 0;
+
+    bRtcGetEpochTime( eUnixEpoch, &pulEpochTime );
+
+	xUptime.uptime = pulEpochTime;
+	eTdfAddMulti(BLE_LOG, TDF_UPTIME, TDF_TIMESTAMP_NONE, NULL, &xUptime);
 }
 
 static void handle_tdf_472(xBLETdfMessage_t* tdfInfo,eBLETdfContinuousModeState_t mode_state)
