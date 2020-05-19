@@ -74,6 +74,8 @@ void prvBoardLoggersInit(void);
 
 /* Create UART Driver, 4 buffers of 128 bytes each, 64 byte receive stream */
 UART_MODULE_CREATE(SERIAL_OUTPUT, NRF_UARTE0, UARTE0_UART0_IRQHandler, UNUSED_IRQ, 4, 512, 64);
+/* TODO : Init the second uart for wifi AT command */
+/*UART_MODULE_CREATE(SERIAL_OUTPUT_WIFI, NRF_UARTE3, UARTE0_UART3_IRQHandler, UNUSED_IRQ, 4, 512, 64); */
 
 /* Create Watchdog Timer: The handler is assigned during initialisation, set to NULL as placeholder */
 WATCHDOG_MODULE_CREATE(WDT_IRQHandler, WDT_IRQn, NULL);
@@ -83,6 +85,8 @@ SPI_MODULE_CREATE(NRF52_SPI, SPI_INSTANCE, SPIM0_TWIM0_IRQHandler);
 
 xWatchdogModule_t *pxWatchdog = &WATCHDOG_MODULE_GET(WDT_IRQHandler);
 xUartModule_t *pxUartOutput = &UART_MODULE_GET(SERIAL_OUTPUT);
+/* TODO: SERIAL_OUTPUT_WIFI */
+/*xUartModule_t *pxUartOutput = &UART_MODULE_GET(SERIAL_OUTPUT); */
 xI2CModule_t *pxI2C = &I2C_MODULE_GET(NRF_I2C);
 xAdcModule_t *pxAdc = &ADC_MODULE_GET(ADC);
 xSpiModule_t *pxSpi = &SPI_MODULE_GET(NRF52_SPI);
@@ -91,10 +95,19 @@ xSerialModule_t xHCIOutput = {
     .pxImplementation = &xUartBackend,
     .pvContext        = &UART_MODULE_GET( SERIAL_OUTPUT )
 };
+/* TODO: Serial output via  for wifi AT command */
+/*xSerialModule_t xWifiATCmdOutput = {
+    .pxImplementation = &xUartBackend,
+    .pvContext        = &UART_MODULE_GET( SERIAL_OUTPUT_WIFI )
+};*/
 
 xSerialModule_t xSerialOutput = {
 	.pxImplementation = &xUsbBackend,
 	.pvContext = NULL};
+/* TODO: Serial output via wifi  */
+/*xSerialModule_t xSerialOutput = {
+	.pxImplementation = &xWifiBackend,
+	.pvContext = NULL}; */
 
 /* System Structures */
 xDeviceConstants_t xDeviceConstants;
@@ -110,13 +123,20 @@ xLEDConfig_t xLEDConfig = {
 
 xSerialModule_t *const pxSerialOutput = &xSerialOutput;
 xSerialModule_t *const pxHCIOutput = &xHCIOutput;
+/* TODO: uart for wifi command output */
+/*xSerialModule_t *const pxWifiATCmdOutput = &xWifiATCmdOutput;*/
 
 /* Logger Variables */
 TDF_LOGGER_STRUCTURES(SERIAL_LOG, xSerialLog, "SerialLog", (xLoggerDevice_t *)&xSerialLoggerDevice, 100, 0, UINT32_MAX);
 TDF_LOGGER_STRUCTURES(BLE_LOG, xBluetoothLog, "BtLog", (xLoggerDevice_t *)&xBluetoothLoggerDevice, CSIRO_BLUETOOTH_MESSAGE_MAX_LENGTH, 0, UINT32_MAX);
 
+/* TODO: init Tdf report via wifi  */
+/* TDF_LOGGER_STRUCTURES( WIFI_LOG, xWifiLog, "WifiLog", (xLoggerDevice_t *) &xWifiLoggerDevice, CSIRO_WIFI_MESSAGE_MAX_LENGTH, 0, LOGGER_LENGTH_REMAINING_BLOCKS );*/
+
 LOGS(&xSerialLog_log, &xBluetoothLog_log);
 TDF_LOGS(&xSerialLog, &xBluetoothLog);
+/* TODO: init Tdf report via wifi  */
+/* TDF_LOGS(&xSerialLog, &xWifiLog);*/
 
 /*-----------------------------------------------------------*/
 
