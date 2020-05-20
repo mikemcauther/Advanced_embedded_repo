@@ -146,6 +146,7 @@ eModuleError_t eLogBuilderFinish( xLogBuilder_t *pxBuilder )
 		pxSerialOutput->pxImplementation->fnSendBuffer( pxSerialOutput->pvContext, pxBuilder->pcString, pxBuilder->ulIndex );
 	}
 	else {
+		/* TODO : Consider pxWifiATCmdOutput */
 		pxSerialOutput->pxImplementation->fnReleaseBuffer( pxSerialOutput->pvContext, pxBuilder->pcString );
 	}
 	pxBuilder->bValid = false;

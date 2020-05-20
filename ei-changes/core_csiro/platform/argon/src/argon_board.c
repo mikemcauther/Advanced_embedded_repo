@@ -82,6 +82,8 @@ WATCHDOG_MODULE_CREATE(WDT_IRQHandler, WDT_IRQn, NULL);
 I2C_MODULE_CREATE(NRF_I2C, I2C_INSTANCE);
 ADC_MODULE_CREATE(ADC, ADC_INSTANCE, UNUSED);
 SPI_MODULE_CREATE(NRF52_SPI, SPI_INSTANCE, SPIM0_TWIM0_IRQHandler);
+/* TODO: SPI for flash */
+/* SPI_MODULE_CREATE( FLASH_SPI, FLASH_SPI_INSTANCE, SPIM0_TWIM0_IRQHandler ); */
 
 xWatchdogModule_t *pxWatchdog = &WATCHDOG_MODULE_GET(WDT_IRQHandler);
 xUartModule_t *pxUartOutput = &UART_MODULE_GET(SERIAL_OUTPUT);
@@ -90,6 +92,26 @@ xUartModule_t *pxUartOutput = &UART_MODULE_GET(SERIAL_OUTPUT);
 xI2CModule_t *pxI2C = &I2C_MODULE_GET(NRF_I2C);
 xAdcModule_t *pxAdc = &ADC_MODULE_GET(ADC);
 xSpiModule_t *pxSpi = &SPI_MODULE_GET(NRF52_SPI);
+/* TODO: SPI for flash */
+/*SPI_MODULE_CREATE( FLASH_SPI, FLASH_SPI_INSTANCE, SPIM0_TWIM0_IRQHandler );*/
+
+/* TODO: flash Init */
+/* Flash Memory */
+/*
+xMX25rHardware_t xMX25rHardware = {
+    .pxInterface = &SPI_MODULE_GET( FLASH_SPI ),
+    .xSpiConfig  = { .xCsGpio = FLASH_CS_GPIO, 0, 0, 0, 0 }
+};
+xFlashDevice_t xMX25rDevice = {
+    .xSettings        = { 0 },
+    .pxImplementation = &xMX25rDriver,
+    .xCommandQueue  = NULL,
+    .pcName           = "MX25R",
+    .pxHardware       = (xFlashDefaultHardware_t *) &xMX25rHardware
+};
+
+xFlashDevice_t *const  pxOnboardFlash = &xMX25rDevice;
+*/
 
 xSerialModule_t xHCIOutput = {
     .pxImplementation = &xUartBackend,
@@ -130,6 +152,8 @@ TDF_LOGGER_STRUCTURES(BLE_LOG, xBluetoothLog, "BtLog", (xLoggerDevice_t *)&xBlue
 /* TDF_LOGGER_STRUCTURES( WIFI_LOG, xWifiLog, "WifiLog", (xLoggerDevice_t *) &xWifiLoggerDevice, CSIRO_WIFI_MESSAGE_MAX_LENGTH, 0, LOGGER_LENGTH_REMAINING_BLOCKS );*/
 
 LOGS(&xSerialLog_log, &xBluetoothLog_log);
+/* TODO: Add Flash log */
+/*LOGS( &xSerialLog_log, &xBluetoothLog_log, &xFlashLog_log );*/
 TDF_LOGS(&xSerialLog, &xBluetoothLog);
 /* TODO: init Tdf report via wifi  */
 /* TDF_LOGS(&xSerialLog, &xWifiLog);*/
