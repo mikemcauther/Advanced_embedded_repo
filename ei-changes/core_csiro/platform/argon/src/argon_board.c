@@ -104,10 +104,6 @@ xSerialModule_t xHCIOutput = {
 xSerialModule_t xSerialOutput = {
 	.pxImplementation = &xUsbBackend,
 	.pvContext = NULL};
-/* TODO: Serial output via wifi  */
-/*xSerialModule_t xSerialOutput = {
-	.pxImplementation = &xWifiBackend,
-	.pvContext = NULL}; */
 
 /* System Structures */
 xDeviceConstants_t xDeviceConstants;
