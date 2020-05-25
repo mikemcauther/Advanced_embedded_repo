@@ -3,7 +3,7 @@
 ##############################################################################
 
 PROJ_NAME     		:= mobileNode
-SUPPORTED_TARGETS 	:= argon
+SUPPORTED_TARGETS 	:= nrf52840dk argon
 
 ##############################################################################
 # Application Specific Flags
@@ -22,4 +22,5 @@ APPLICATION_SRCS 	:=
 # Main Build Rules
 ##############################################################################
 
-include ./../../../common/proj_common.mk
+include ../../../common/proj_common.mk
+include $(REPO_ROOT)/core_csiro/m_common.mk

@@ -39,12 +39,6 @@
 // clang-format on
 
 /* Type Definitions -----------------------------------------*/
-typedef enum ePushButtonState_t {
-    PUSHBUTTON_RELEASE  = 0x01,
-    PUSHBUTTON_ACTIVE_PUSHED = 0x02,
-    PUSHBUTTON_ACTIVE = 0x04,
-    PUSHBUTTON_DEACTIVE_PUSHED = 0x08,
-} ePushButtonState_t;
 
 /* Function Declarations ------------------------------------*/
 /* Private Variables ----------------------------------------*/
