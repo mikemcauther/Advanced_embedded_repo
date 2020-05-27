@@ -42,6 +42,7 @@ extern xDeviceConstants_t xDeviceConstants;
 extern xFlashDevice_t *const  pxOnboardFlash;
 extern xSerialModule_t *const pxSerialOutput;
 extern xSerialModule_t *const pxHCIOutput;
+extern xSerialModule_t *const pxWifiATCmdOutput;
 
 /* Function Declarations ------------------------------------*/
 
@@ -121,6 +122,13 @@ fnSerialByteHandler_t fnBoardSerialHandler( void );
  */
 fnSerialByteHandler_t fnBoardHCIHandler( void );
 
+/**@brief Provide an alternate serial byte handler
+ *
+ *  If the default Unified Serial Comms handler is not desired, overwrite it with this function
+ * 
+ * @retval		Alternate Wifi byte handler
+ */
+fnSerialByteHandler_t fnBoardWifiHandler( void );
 /**
   @}
 */

@@ -13,6 +13,7 @@
 #include "uart.h"
 #include "unified_comms_serial.h"
 #include "s4527438_hal_hci.h"
+#include "s4527438_hal_wifi.h"
 
 /* Private Defines ------------------------------------------*/
 // clang-format off
@@ -34,6 +35,10 @@ ATTR_WEAK fnSerialByteHandler_t fnBoardSerialHandler( void )
 ATTR_WEAK fnSerialByteHandler_t fnBoardHCIHandler( void )
 {
 	return vHCIPacketBuilder;
+}
+ATTR_WEAK fnSerialByteHandler_t fnBoardWifiHandler( void )
+{
+	return vWifiPacketBuilder;
 }
 
 /*-----------------------------------------------------------*/

@@ -18,6 +18,7 @@
 #include "test_reporting.h"
 
 #include "s4527438_hal_hci.h"
+#include "s4527438_hal_wifi.h"
 
 #include "s4527438_lib_cli.h"
 #include "s4527438_lib_log.h"
@@ -25,6 +26,7 @@
 #include "s4527438_os_led.h"
 #include "s4527438_os_log.h"
 #include "s4527438_os_hci.h"
+#include "s4527438_os_wifi.h"
 #include "s4527438_os_ble.h"
 
 // cli related header
@@ -32,6 +34,7 @@
 #include "s4527438_cli_log.h"
 #include "s4527438_cli_timer.h"
 #include "s4527438_cli_hci.h"
+#include "s4527438_cli_wifi.h"
 #include "s4527438_cli_ble.h"
 
 /* Private Defines ------------------------------------------*/
@@ -78,11 +81,13 @@ void vApplicationStartupCallback( void )
     
 
     s4527438_hal_hci_init();
+    s4527438_hal_wifi_init();
 
     s4527438_os_led_init();
     s4527438_os_log_init();
     s4527438_os_hci_init();
     s4527438_os_ble_init();
+    s4527438_os_wifi_init();
 
     s4527438_lib_cli_init();
     s4527438_lib_log_init();
@@ -92,7 +97,7 @@ void vApplicationStartupCallback( void )
     s4527438_cli_time_init();
     s4527438_cli_hci_init();
     s4527438_cli_ble_init();
-
+    s4527438_cli_wifi_init();
 }
 
 void vApplicationTickCallback(uint32_t ulUptime) 

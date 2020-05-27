@@ -51,4 +51,5 @@ MY_OS_LIB_LOG_DIR   := $(MY_OS_LIB_ROOT)/log
 MY_OS_LIB_LED_DIR   := $(MY_OS_LIB_ROOT)/led
 MY_OS_LIB_HCI_DIR   := $(MY_OS_LIB_ROOT)/hci
 MY_OS_LIB_BLE_DIR   := $(MY_OS_LIB_ROOT)/ble
+MY_OS_LIB_WIFI_DIR  := $(MY_OS_LIB_ROOT)/wifi
 ##############################################################################

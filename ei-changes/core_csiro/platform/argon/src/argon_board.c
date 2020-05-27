@@ -64,6 +64,8 @@ void prvBoardPrintIdentifiers(void);
 void prvBoardLedsInit(void);
 void prvBoardNvmInit(void);
 void prvBoardSerialInit(void);
+/* TODO: Wifi AT CMD */
+void prvBoardSerialWifiATCmdInit(void);
 void prvBoardInterfaceInit(void);
 void prvBoardPinsInit(void);
 void prvBoardBluetoothInit(void);
@@ -75,7 +77,7 @@ void prvBoardLoggersInit(void);
 /* Create UART Driver, 4 buffers of 128 bytes each, 64 byte receive stream */
 UART_MODULE_CREATE(SERIAL_OUTPUT, NRF_UARTE0, UARTE0_UART0_IRQHandler, UNUSED_IRQ, 4, 512, 64);
 /* TODO : Init the second uart for wifi AT command */
-/*UART_MODULE_CREATE(SERIAL_OUTPUT_WIFI, NRF_UARTE3, UARTE0_UART3_IRQHandler, UNUSED_IRQ, 4, 512, 64); */
+UART_MODULE_CREATE(SERIAL_OUTPUT_WIFI, NRF_UARTE1, UARTE1_IRQHandler, UNUSED_IRQ, 4, 512, 64);
 
 /* Create Watchdog Timer: The handler is assigned during initialisation, set to NULL as placeholder */
 WATCHDOG_MODULE_CREATE(WDT_IRQHandler, WDT_IRQn, NULL);
@@ -88,7 +90,7 @@ SPI_MODULE_CREATE(NRF52_SPI, SPI_INSTANCE, SPIM0_TWIM0_IRQHandler);
 xWatchdogModule_t *pxWatchdog = &WATCHDOG_MODULE_GET(WDT_IRQHandler);
 xUartModule_t *pxUartOutput = &UART_MODULE_GET(SERIAL_OUTPUT);
 /* TODO: SERIAL_OUTPUT_WIFI */
-/*xUartModule_t *pxUartOutput = &UART_MODULE_GET(SERIAL_OUTPUT); */
+xUartModule_t *pxWifiOutput = &UART_MODULE_GET(SERIAL_OUTPUT_WIFI);
 xI2CModule_t *pxI2C = &I2C_MODULE_GET(NRF_I2C);
 xAdcModule_t *pxAdc = &ADC_MODULE_GET(ADC);
 xSpiModule_t *pxSpi = &SPI_MODULE_GET(NRF52_SPI);
@@ -118,10 +120,10 @@ xSerialModule_t xHCIOutput = {
     .pvContext        = &UART_MODULE_GET( SERIAL_OUTPUT )
 };
 /* TODO: Serial output via  for wifi AT command */
-/*xSerialModule_t xWifiATCmdOutput = {
+xSerialModule_t xWifiATCmdOutput = {
     .pxImplementation = &xUartBackend,
     .pvContext        = &UART_MODULE_GET( SERIAL_OUTPUT_WIFI )
-};*/
+};
 
 xSerialModule_t xSerialOutput = {
 	.pxImplementation = &xUsbBackend,
@@ -142,7 +144,7 @@ xLEDConfig_t xLEDConfig = {
 xSerialModule_t *const pxSerialOutput = &xSerialOutput;
 xSerialModule_t *const pxHCIOutput = &xHCIOutput;
 /* TODO: uart for wifi command output */
-/*xSerialModule_t *const pxWifiATCmdOutput = &xWifiATCmdOutput;*/
+xSerialModule_t *const pxWifiATCmdOutput = &xWifiATCmdOutput;
 
 /* Logger Variables */
 TDF_LOGGER_STRUCTURES(SERIAL_LOG, xSerialLog, "SerialLog", (xLoggerDevice_t *)&xSerialLoggerDevice, 100, 0, UINT32_MAX);
@@ -207,6 +209,8 @@ void prvBoardLowPowerInit(void)
 	prvBoardPeripheralInit();
 	/* Initialise Logger Structures */
 	prvBoardLoggersInit();
+    /* TODO : Init wifi AT cmd */
+    prvBoardSerialWifiATCmdInit();
 }
 
 /*-----------------------------------------------------------*/
@@ -236,10 +240,18 @@ void prvBoardServicesInit(void)
 	vUsbSetByteHandler(fnBoardSerialHandler());
 
     static xSerialReceiveArgs_t xArgs;
+    /* TODO: Create for WIFI Uart port */
+    static xSerialReceiveArgs_t xArgsWifiATCmd;
+
     /* Start our serial handler thread */
     xArgs.pxUart    = pxUartOutput;
     xArgs.fnHandler = fnBoardHCIHandler();
     configASSERT( xTaskCreate( vSerialReceiveTask, "Ser Recv", configMINIMAL_STACK_SIZE, &xArgs, tskIDLE_PRIORITY + 1, NULL ) == pdPASS );
+    /* TODO: Create for WIFI Uart port */
+    /* Start our serial handler thread */
+    xArgsWifiATCmd.pxUart    = pxWifiOutput;
+    xArgsWifiATCmd.fnHandler = fnBoardWifiHandler();
+    configASSERT( xTaskCreate( vSerialReceiveTask, "Ser Recv Wifi Uart", configMINIMAL_STACK_SIZE, &xArgsWifiATCmd, tskIDLE_PRIORITY + 1, NULL ) == pdPASS );
 
 	/* Setup our Unified Comms interfaces */
 	vUnifiedCommsInit(&xSerialComms);
@@ -268,6 +280,11 @@ void prvBoardPinsInit(void)
 	/* Enable PCB Antenna, signals appear to be inverted from block diagram */
 	vGpioSetup(SKY13351_CTRL_1, GPIO_PUSHPULL, GPIO_PUSHPULL_LOW);
 	vGpioSetup(SKY13351_CTRL_2, GPIO_PUSHPULL, GPIO_PUSHPULL_HIGH);
+    /* TODO: Enable Wifi */
+    /* NOTE: Maybe not need it since the RESET button has connected to this pin */
+#if 0
+	vGpioSetup(WIFI_ENABLE_PIN, GPIO_PUSHPULL, GPIO_PUSHPULL_HIGH);
+#endif
 }
 
 /*-----------------------------------------------------------*/
@@ -290,6 +307,20 @@ void prvBoardSerialInit(void)
 	pxUartOutput->xPlatform.xCts = UNUSED_GPIO;
 
 	eUartInit(pxUartOutput, true);
+}
+
+/* TODO: For wifi AT command UART port */
+void prvBoardSerialWifiATCmdInit(void)
+{
+	/* TODO: Figure out how to increase while retaining reliable serial recv */
+	pxWifiOutput->xPlatform.pxTimer = NRF_TIMER2;
+	pxWifiOutput->ulBaud = 115200;
+	pxWifiOutput->xPlatform.xRx = WIFI_UART_RX_PIN;
+	pxWifiOutput->xPlatform.xTx = WIFI_UART_TX_PIN;
+	pxWifiOutput->xPlatform.xRts = WIFI_UART_RTS_PIN;
+	pxWifiOutput->xPlatform.xCts = UNUSED_GPIO;
+
+	eUartInit(pxWifiOutput, false);
 }
 
 /*-----------------------------------------------------------*/
