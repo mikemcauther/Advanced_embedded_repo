@@ -90,7 +90,8 @@ CORE_CSIRO_INCS		+= $(wildcard $(CORE_CSIRO_DIR)/arch/common/*/inc)
 # My OS LIB Libraries
 ##############################################################################
 
-PLATFORM_LIBS               += MY_OS_LIB_CLI MY_OS_LIB_LED MY_OS_LIB_LOG MY_OS_LIB_TIMER MY_OS_LIB_HCI MY_OS_LIB_BLE MY_OS_LIB_WIFI MY_OS_LIB_ULTRARANGER
+#PLATFORM_LIBS               += MY_OS_LIB_CLI MY_OS_LIB_LED MY_OS_LIB_LOG MY_OS_LIB_TIMER MY_OS_LIB_HCI MY_OS_LIB_BLE MY_OS_LIB_WIFI MY_OS_LIB_ULTRARANGER
+PLATFORM_LIBS               += $(MY_OS_LIBS)
 
 MY_OS_LIB_CLI_SRCS          := $(wildcard $(MY_OS_LIB_CLI_DIR)/*.c)
 MY_OS_LIB_TIMER_SRCS        += $(wildcard $(MY_OS_LIB_TIMER_DIR)/*.c)

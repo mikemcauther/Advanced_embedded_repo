@@ -18,6 +18,7 @@ APP_CFLAGS			:=
 CORE_CSIRO          := $(realpath ./../../core_csiro)
 APPLICATION_SRCS 	:=
 
+MY_OS_LIBS   := MY_OS_LIB_CLI MY_OS_LIB_LED MY_OS_LIB_LOG MY_OS_LIB_TIMER MY_OS_LIB_HCI MY_OS_LIB_BLE MY_OS_LIB_WIFI
 ##############################################################################
 # Main Build Rules
 ##############################################################################
