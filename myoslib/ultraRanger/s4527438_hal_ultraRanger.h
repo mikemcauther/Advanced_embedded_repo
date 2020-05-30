@@ -17,9 +17,6 @@
 #include "s4527438_hci_packet.h"
 
 void s4527438_hal_ultraRanger_init(void);
-/* TODO */                                   
-/*                                           
-int s4527438_hal_ultraRanger_read_distance(){
-*/
+uint32_t s4527438_hal_ultraRanger_read_distance();
 
 #endif /* S4527438_HAL_ULTRARANGER_H_ */
