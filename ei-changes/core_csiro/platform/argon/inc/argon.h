@@ -51,6 +51,7 @@
 #define WIFI_UART_RX_PIN    (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 4 )}        
 #define WIFI_UART_TX_PIN    (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 5 )}       
 #define WIFI_UART_RTS_PIN    (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 7 )}       
+#define WIFI_UART_CTS_PIN    (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 6 )}       
 
 #define UART1				1
 #define UART1_RX_PIN        (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 3 )}        //D8

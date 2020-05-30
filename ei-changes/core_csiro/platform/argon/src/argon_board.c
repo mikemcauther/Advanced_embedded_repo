@@ -318,9 +318,9 @@ void prvBoardSerialWifiATCmdInit(void)
 	pxWifiOutput->xPlatform.xRx = WIFI_UART_RX_PIN;
 	pxWifiOutput->xPlatform.xTx = WIFI_UART_TX_PIN;
 	pxWifiOutput->xPlatform.xRts = WIFI_UART_RTS_PIN;
-	pxWifiOutput->xPlatform.xCts = UNUSED_GPIO;
+	pxWifiOutput->xPlatform.xCts = WIFI_UART_CTS_PIN;
 
-	eUartInit(pxWifiOutput, false);
+	eUartInit(pxWifiOutput, true);
 }
 
 /*-----------------------------------------------------------*/
