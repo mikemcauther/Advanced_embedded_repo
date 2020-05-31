@@ -44,6 +44,7 @@
 #include "serial_logger.h"
 
 #include "nrf_drv_clock.h"
+#include "nrf_delay.h"
 
 /* Private Defines ------------------------------------------*/
 // clang-format off
@@ -312,15 +313,17 @@ void prvBoardSerialInit(void)
 /* TODO: For wifi AT command UART port */
 void prvBoardSerialWifiATCmdInit(void)
 {
+	vGpioSetup( WIFI_ENABLE_PIN, GPIO_PUSHPULL, GPIO_PUSHPULL_HIGH );
+
 	/* TODO: Figure out how to increase while retaining reliable serial recv */
 	pxWifiOutput->xPlatform.pxTimer = NRF_TIMER2;
 	pxWifiOutput->ulBaud = 115200;
 	pxWifiOutput->xPlatform.xRx = WIFI_UART_RX_PIN;
 	pxWifiOutput->xPlatform.xTx = WIFI_UART_TX_PIN;
 	pxWifiOutput->xPlatform.xRts = WIFI_UART_RTS_PIN;
-	pxWifiOutput->xPlatform.xCts = WIFI_UART_CTS_PIN;
+	pxWifiOutput->xPlatform.xCts = UNUSED_GPIO;
 
-	eUartInit(pxWifiOutput, true);
+	eUartInit(pxWifiOutput, false);
 }
 
 /*-----------------------------------------------------------*/

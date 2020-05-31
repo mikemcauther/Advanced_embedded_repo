@@ -43,6 +43,7 @@
 #define TWIM1_SCL_PIN		(xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 0, 27 )}
 
 /* Wifi (through ESP32) */
+#define WIFI_RESET_PIN  	(xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 0, 18 )}
 #define WIFI_ENABLE_PIN  	(xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 0, 24 )}
 #define ESP_BOOT_MODE_PIN 	(xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 0, 16 )}
 #define ESP_HOST_WK_PIN 	(xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 0, 7 )}
