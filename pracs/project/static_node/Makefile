@@ -9,7 +9,7 @@ SUPPORTED_TARGETS 	:= nrf52840dk xenon
 # Application Specific Flags
 ##############################################################################
 
-APP_CFLAGS			:= 
+APP_CFLAGS			:=
 
 ##############################################################################
 # Application Specific Library Source Files

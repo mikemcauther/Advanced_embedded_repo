@@ -9,7 +9,7 @@ SUPPORTED_TARGETS 	:= nrf52840dk argon
 # Application Specific Flags
 ##############################################################################
 
-APP_CFLAGS			:= 
+APP_CFLAGS			:= -DARGON_WIFI
 
 ##############################################################################
 # Application Specific Library Source Files

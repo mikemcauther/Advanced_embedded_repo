@@ -128,7 +128,9 @@ fnSerialByteHandler_t fnBoardHCIHandler( void );
  * 
  * @retval		Alternate Wifi byte handler
  */
+#ifdef ARGON_WIFI
 fnSerialByteHandler_t fnBoardWifiHandler( void );
+#endif
 /**
   @}
 */

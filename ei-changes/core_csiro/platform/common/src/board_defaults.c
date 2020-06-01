@@ -13,7 +13,10 @@
 #include "uart.h"
 #include "unified_comms_serial.h"
 #include "s4527438_hal_hci.h"
+
+#ifdef ARGON_WIFI
 #include "s4527438_hal_wifi.h"
+#endif
 
 /* Private Defines ------------------------------------------*/
 // clang-format off
@@ -36,10 +39,12 @@ ATTR_WEAK fnSerialByteHandler_t fnBoardHCIHandler( void )
 {
 	return vHCIPacketBuilder;
 }
+#ifdef ARGON_WIFI
 ATTR_WEAK fnSerialByteHandler_t fnBoardWifiHandler( void )
 {
 	return vWifiPacketBuilder;
 }
+#endif
 
 /*-----------------------------------------------------------*/
 
