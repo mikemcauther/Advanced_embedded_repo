@@ -99,10 +99,13 @@ void vApplicationStartupCallback( void )
 void vApplicationTickCallback(uint32_t ulUptime) 
 {
 	UNUSED(ulUptime);
+
+    uint32_t distance_mm = s4527438_hal_ultraRanger_read_distance();
+    s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[HCSR04 Event]: [%d]",distance_mm);
 }
 
 /* TODO : Re-write BLE route call back to detect distance and forward to PC BSU via wifi */
-/*
+#if 0
 void vUnifiedCommsRouterAdapter( xCommsInterface_t *           pxComms,
                                xUnifiedCommsIncomingRoute_t *pxCurrentRoute,
                                xUnifiedCommsMessage_t *      pxMessage )
@@ -114,6 +117,6 @@ void vUnifiedCommsRouterAdapter( xCommsInterface_t *           pxComms,
 
 	// Forward packet to PC(BSU) via wifi by TDF report , need to add self identification info
 }
-*/
+#endif
 /*-----------------------------------------------------------*/
 

@@ -242,7 +242,8 @@ void prvBoardLedsInit(void)
 void prvBoardSerialInit(void)
 {
 	/* TODO: Figure out how to increase while retaining reliable serial recv */
-	pxUartOutput->xPlatform.pxTimer = NRF_TIMER1;
+	//pxUartOutput->xPlatform.pxTimer = NRF_TIMER1;
+	pxUartOutput->xPlatform.pxTimer = NRF_TIMER2;
 	pxUartOutput->ulBaud = 115200;
 	pxUartOutput->xPlatform.xRx = UART0_RX_PIN;
 	pxUartOutput->xPlatform.xTx = UART0_TX_PIN;

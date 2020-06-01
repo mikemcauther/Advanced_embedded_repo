@@ -50,7 +50,7 @@
 #define SPIM0_SS_PIN		(xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 0, 31 )}	// SPI0 SS Pin (Placeholder: Each device should have its own SS pin).
 
 /* Ultrasonic */
-#define ULTRASONIC_TRIGGER_PIN  (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 3 )}	// D8
+#define ULTRASONIC_TRIGGER_PIN  (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 3 )}	// D8 
 #define ULTRASONIC_ECHO_PIN     (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 12 )}   // D7
 
 /*
