@@ -19,9 +19,11 @@
 #include "esp_wifi.h"
 #include "uart.h"
 #include "nrf_delay.h"
+#include "s4527438_lib_log.h"
 
 /* Private Defines ------------------------------------------*/
 // clang-format off
+#if 0
 #define RECV_ERROR 			"ERROR\r\n\0"
 #define RECV_OK 			"OK\r\n\0"
 #define RECV_BUSY 			"busy p...\r\n\0"
@@ -31,6 +33,17 @@
 #define RECV_SEND_WAITING	">\r\n\0"
 #define RECV_REMOTE_CONNECT		"CONNECT\r\n\0"
 #define RECV_CONNECT_ERROR		"+CWJAP:2\r\n\0"
+#else
+#define RECV_ERROR 			"ERROR"
+#define RECV_OK 			"OK"
+#define RECV_BUSY 			"busy p..."
+#define RECV_CONNECTED		"WIFI CONNECTED"
+#define RECV_GOT_IP			"WIFI GOT IP"
+#define RECV_DISCONNECT		"WIFI DISCONNECT"
+#define RECV_SEND_WAITING	">"
+#define RECV_REMOTE_CONNECT		"CONNECT"
+#define RECV_CONNECT_ERROR		"+CWJAP:2"
+#endif
 #define RECV_BUFFER 		50
 #define RECV_MAX_RESPONSE 	18
 // clang-format on
@@ -93,6 +106,7 @@ static SemaphoreHandle_t xReadySemaphore;
 
 static uint8_t pucEspResponseCheck[RECV_MAX_RESPONSE];
 
+bool bIsConnecting  = false;
 bool bStarted		= false;
 bool bConnected		= false;
 bool bDisconnected  = false;
@@ -115,6 +129,9 @@ xWifiConnection_t xConnection = {
 
 eEspConnection_t eGetConnectionStatus( void )
 {
+    if ( bIsConnecting == true ) {
+		return WIFI_CONNECTING;
+    }
 	if ( bConnected ) {
 		return WIFI_CONNECTED;
 	}
@@ -283,6 +300,46 @@ eModuleError_t eEspSendData( eEspCommand_t eQueryType, uint8_t *pucData, uint8_t
 }
 
 /*-----------------------------------------------------------*/
+eModuleError_t eEspForceReconnect( eEspCommand_t eQueryType )
+{
+	xBufferBuilder_t xBuilder;
+	uint32_t		 ulBufferLen;
+	uint8_t *		 pucBuffer;
+	uint8_t			 ucDataLen;
+
+#if 0
+    if ( bIsConnecting == true ) {
+	    return ERROR_NONE;
+    }
+    
+#endif
+	/* Construct the packet to send */
+	// pucBuffer = (uint8_t *) xUartBackend.fnClaimBuffer( pxConfig->pxUart, &ulBufferLen, portMAX_DELAY );
+	pucBuffer = (uint8_t *) xUartBackend.fnClaimBuffer( pxConfig->pxUart, &ulBufferLen);
+	configASSERT( pucBuffer != NULL );
+
+	ucDataLen = 8;
+	vBufferBuilderStart( &xBuilder, pucBuffer, ulBufferLen );
+	vBufferBuilderPushData( &xBuilder, "AT+CWLAP", ucDataLen );
+
+	switch ( eQueryType ) {
+		case COMMAND_TEST:
+			break;
+
+		case COMMAND_QUERY:
+			break;
+
+		case COMMAND_SET:
+			break;
+
+		case COMMAND_EXECUTE:
+			break;
+	}
+
+    //return eEspSendRAWCommnd(xBuilder.pucBuffer,xBuilder.ulIndex);
+	return eEspSendCommand( &xBuilder );
+}
+/*-----------------------------------------------------------*/
 
 eModuleError_t eEspSetMode( eEspCommand_t eQueryType, eEspWifiMode_t eMode )
 {
@@ -432,6 +489,7 @@ eModuleError_t eEspConnect( eEspCommand_t eQueryType )
 			break;
 	}
 
+    bIsConnecting = true;
 	return eEspSendCommand( &xBuilder );
 }
 
@@ -464,6 +522,8 @@ bool bEspCompare( xEspMessage_t *pucRevMessage, uint8_t *pucComResponse, uint8_t
 	uint8_t ucLength;
 	int8_t  ucComparison;
 
+	UNUSED( ucMax );
+#if 0
 	ucLength = strlen( (char *) pucEspResponseCheck );
 
 	/* Check if the expected response is less than the actual */
@@ -471,10 +531,24 @@ bool bEspCompare( xEspMessage_t *pucRevMessage, uint8_t *pucComResponse, uint8_t
 		return false;
 	}
 
-	ucComparison = strncmp( (char *) &pucRevMessage->pucMessage[pucRevMessage->ucIndex - ucLength], (char *) pucComResponse, ucLength );
+	//ucComparison = strncmp( (char *) &pucRevMessage->pucMessage[pucRevMessage->ucIndex - ucLength], (char *) pucComResponse, ucLength );
+	ucComparison = strncmp( (char *) &pucRevMessage->pucMessage, (char *) pucComResponse, ucLength );
 	if ( ucComparison <= ucMax && ucComparison >= -ucMax ) {
 		return true;
 	}
+#else
+	ucLength = strlen( (char *) pucEspResponseCheck );
+
+	/* Check if the expected response is less than the actual */
+	if ( pucRevMessage->ucIndex < ucLength ) {
+		return false;
+	}
+
+	ucComparison = strncmp( (char *) &pucRevMessage->pucMessage, (char *) pucComResponse, ucLength );
+	if ( ucComparison == 0 ) {
+		return true;
+	}
+#endif
 
 	return false;
 }
@@ -540,7 +614,6 @@ eEspRecievedCommand_t eEspCheckCommand( xEspMessage_t *pucEspMessage )
 void vEspSerialByteHandler( char cRxByte )
 {
 
-#if 0
 	if ( bStarted == false ) {
 
 		xEspResponse.pucMessage[xEspResponse.ucIndex++] = (uint8_t) cRxByte;
@@ -556,21 +629,25 @@ void vEspSerialByteHandler( char cRxByte )
 		}
 	}
 	else {
-#endif
-
 
 		/* Wait for end of line to be sent - some messages start with \r\n, as for the >2 section */
 		if ( (cRxByte == '\r' || cRxByte == '\n') && xEspResponse.ucIndex > 0 ) {
+#if 0
+		    xEspResponse.pucMessage[xEspResponse.ucIndex++] = '\r';
 		    xEspResponse.pucMessage[xEspResponse.ucIndex++] = '\n';
-		    xEspResponse.pucMessage[xEspResponse.ucIndex++] = '\0';
+#else
+		    xEspResponse.pucMessage[xEspResponse.ucIndex] = '\r';
+		    xEspResponse.pucMessage[xEspResponse.ucIndex+1] = '\n';
+		    xEspResponse.pucMessage[xEspResponse.ucIndex+2] = '\0';
+#endif
 			xQueueSend( pxCommandQueue, &xEspResponse, portMAX_DELAY );
+			xEspResponse.ucIndex = 0;
+        } else if((cRxByte == '\r' || cRxByte == '\n')) {
 			xEspResponse.ucIndex = 0;
 		}else {
 		    xEspResponse.pucMessage[xEspResponse.ucIndex++] = (uint8_t) cRxByte;
         }
-#if 0
 	}
-#endif
 }
 
 /*-----------------------------------------------------------*/
@@ -585,6 +662,7 @@ void vEspController( void *pvParameters )
 
 		if ( xQueueReceive( pxCommandQueue, &xEspMessage, portMAX_DELAY ) == pdPASS ) {
             eLog( LOG_APPLICATION, LOG_APOCALYPSE, "%s", xEspMessage.pucMessage );
+            s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"%s",xEspMessage.pucMessage);
 			eError = eEspCheckCommand( &xEspMessage );
 
 			switch ( eError ) {
@@ -602,6 +680,7 @@ void vEspController( void *pvParameters )
 					bDisconnected = false;
 					break;
 				case MSG_DISCONNECT:
+                    bIsConnecting  = false;
 					eEspConnect( COMMAND_SET );
 					bConnected	= false;
 					bDisconnected = true;
@@ -610,11 +689,13 @@ void vEspController( void *pvParameters )
 					bRemoteConnect = true;
 					break;
 				case MSG_GOT_IP:
+                    bIsConnecting  = false;
 					bConnected = true;
 					break;
 				case MSG_UNKNOWN:
 					break;
 				case MSG_CONNECT_ERROR:
+                    bIsConnecting  = false;
 					eEspConnect( COMMAND_SET );
 					bDisconnected = false;
 					break;

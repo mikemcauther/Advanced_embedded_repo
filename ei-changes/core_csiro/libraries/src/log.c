@@ -89,7 +89,6 @@ eModuleError_t eLog( SerialLog_t eLog, LogLevel_t eLevel, const char *pcFormat, 
 	}
 	if ( eLevel <= xLoggerLevels[eLog] ) {
 		va_start( va, pcFormat );
-		/* TODO : Consider pxWifiATCmdOutput */
 		eError = pxSerialOutput->pxImplementation->fnWrite( pxSerialOutput->pvContext, pcFormat, va );
 		va_end( va );
 	}
@@ -106,7 +105,6 @@ eModuleError_t eLogBuilderStart( xLogBuilder_t *pxBuilder, SerialLog_t eLog )
 	}
 	pxBuilder->eLog		= eLog;
 	pxBuilder->ulIndex  = 0;
-				/* TODO : Consider pxWifiATCmdOutput */
 	pxBuilder->pcString = pxSerialOutput->pxImplementation->fnClaimBuffer( pxSerialOutput->pvContext, &pxBuilder->ulMaxLen );
 	pxBuilder->bValid   = ( pxBuilder->pcString != NULL );
 	return pxBuilder->bValid ? ERROR_NONE : ERROR_TIMEOUT;
@@ -136,17 +134,14 @@ eModuleError_t eLogBuilderPush( xLogBuilder_t *pxBuilder, LogLevel_t eLevel, con
 eModuleError_t eLogBuilderFinish( xLogBuilder_t *pxBuilder )
 {
 	if ( !pxBuilder->bValid ) {
-		/* TODO : Consider pxWifiATCmdOutput */
 		pxSerialOutput->pxImplementation->fnReleaseBuffer( pxSerialOutput->pvContext, pxBuilder->pcString );
 		return ERROR_UNAVAILABLE_RESOURCE;
 	}
 	/* Only queue up the buffer for transmission if data is actually there */
 	if ( pxBuilder->ulIndex > 0 ) {
-		/* TODO : Consider pxWifiATCmdOutput */
 		pxSerialOutput->pxImplementation->fnSendBuffer( pxSerialOutput->pvContext, pxBuilder->pcString, pxBuilder->ulIndex );
 	}
 	else {
-		/* TODO : Consider pxWifiATCmdOutput */
 		pxSerialOutput->pxImplementation->fnReleaseBuffer( pxSerialOutput->pvContext, pxBuilder->pcString );
 	}
 	pxBuilder->bValid = false;

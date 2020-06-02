@@ -87,7 +87,7 @@ void vApplicationStartupCallback( void )
     s4527438_hal_hci_init();
     //s4527438_hal_wifi_init();
 
-    s4527438_os_led_init();
+    //s4527438_os_led_init();
     s4527438_os_log_init();
     s4527438_os_hci_init();
     s4527438_os_ble_init();
@@ -96,7 +96,7 @@ void vApplicationStartupCallback( void )
     s4527438_lib_cli_init();
     s4527438_lib_log_init();
 
-    s4527438_cli_led_init();
+    //s4527438_cli_led_init();
     s4527438_cli_log_init();
     s4527438_cli_time_init();
     s4527438_cli_hci_init();
@@ -131,7 +131,7 @@ void prvTask( void *pvParams )
     eEspConnection_t eConnectionStatus;
     UNUSED( pvParams );
 
-    vEspWifiOn( false );
+    vEspWifiOn( true );
 
     eEspTestAT();
 
@@ -146,7 +146,11 @@ void prvTask( void *pvParams )
                 eEspSendData( COMMAND_SET, pucMessage, 1 );
                 break;
             case WIFI_DISCONNECTED:
+                eLog( LOG_APPLICATION, LOG_APOCALYPSE, "DISCONNECTED try to reconnect");
+                eEspForceReconnect( COMMAND_SET );
                 vLedsOn( LEDS_RED );
+                break;
+            case WIFI_CONNECTING:
                 break;
             default:
                 vLedsOn( LEDS_GREEN );

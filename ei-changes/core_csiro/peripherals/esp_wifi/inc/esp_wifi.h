@@ -63,6 +63,7 @@ typedef enum eEspConnection_t {
 	WIFI_CONNECTED	= 0x00,
 	WIFI_DISCONNECTED = 0x01,
 	WIFI_NO_RESPONSE  = 0x02,
+	WIFI_CONNECTING	  = 0x04,
 } eEspConnection_t;
 
 typedef enum eEspCommand_t {
@@ -112,6 +113,8 @@ void vEspWifiOn( bool bResetNetwork );
  */
 void vEspWifiOff( void );
 
+eModuleError_t eEspForceReconnect( eEspCommand_t eQueryType );
+
 /**@brief Set the type of connection setup i.e. Access point or Station
  *
  * @param[in] eQueryType			Specify type of send
@@ -157,6 +160,8 @@ eModuleError_t eEspSetClient( eEspCommand_t eQueryType );
  * @retval	::ERROR_TIMEOUT			Failed to properly respond on serial interface
  */
 eModuleError_t eEspTestAT( void );
+
+eModuleError_t eEspSendRAWCommnd(uint8_t *cmd,uint8_t cmd_len);
 
 /**@brief Get the status of wifi connection
  *
