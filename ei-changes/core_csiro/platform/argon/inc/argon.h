@@ -43,16 +43,15 @@
 #define TWIM1_SCL_PIN		(xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 0, 27 )}
 
 /* Wifi (through ESP32) */
-#define WIFI_RESET_PIN  	(xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 0, 18 )}
 #define WIFI_ENABLE_PIN  	(xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 0, 24 )}
 #define ESP_BOOT_MODE_PIN 	(xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 0, 16 )}
 #define ESP_HOST_WK_PIN 	(xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 0, 7 )}
 
 /* TODO: Wifi UART command line */
-#define WIFI_UART_RX_PIN    (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 4 )}        
-#define WIFI_UART_TX_PIN    (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 5 )}       
-#define WIFI_UART_RTS_PIN    (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 7 )}       
-#define WIFI_UART_CTS_PIN    (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 6 )}       
+#define WIFI_RX_PIN       (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 4 )}
+#define WIFI_TX_PIN       (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 5 )}
+#define WIFI_CTS_PIN      (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 6 )}
+#define WIFI_RTS_PIN      (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 7 )}
 
 #define UART1				1
 #define UART1_RX_PIN        (xGpio_t){.ucPin = NRF_GPIO_PIN_MAP( 1, 3 )}        //D8

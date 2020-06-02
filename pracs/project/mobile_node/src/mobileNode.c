@@ -9,11 +9,13 @@
 #include "FreeRTOS.h"
 #include "board.h"
 
+#include "leds.h"
 #include "log.h"
 #include "watchdog.h"
 #include "argon.h"
 #include "gpio.h"
 #include "event_groups.h"
+#include "esp_wifi.h"
 
 #include "test_reporting.h"
 
@@ -44,8 +46,10 @@
 /* Type Definitions -----------------------------------------*/
 
 /* Function Declarations ------------------------------------*/
+void prvTask( void *pvParams );
 /* Private Variables ----------------------------------------*/
 EventGroupHandle_t   pxPushButtonState;
+STATIC_TASK_STRUCTURES( pxWifi, configMINIMAL_STACK_SIZE, tskIDLE_PRIORITY + 2 );
 
 /*-----------------------------------------------------------*/
 
@@ -81,13 +85,13 @@ void vApplicationStartupCallback( void )
     
 
     s4527438_hal_hci_init();
-    s4527438_hal_wifi_init();
+    //s4527438_hal_wifi_init();
 
     s4527438_os_led_init();
     s4527438_os_log_init();
     s4527438_os_hci_init();
     s4527438_os_ble_init();
-    s4527438_os_wifi_init();
+    //s4527438_os_wifi_init();
 
     s4527438_lib_cli_init();
     s4527438_lib_log_init();
@@ -98,6 +102,8 @@ void vApplicationStartupCallback( void )
     s4527438_cli_hci_init();
     s4527438_cli_ble_init();
     s4527438_cli_wifi_init();
+
+    STATIC_TASK_CREATE( pxWifi, prvTask, "WiFi", NULL );
 }
 
 void vApplicationTickCallback(uint32_t ulUptime) 
@@ -119,5 +125,37 @@ void vUnifiedCommsRouterAdapter( xCommsInterface_t *           pxComms,
 	// Forward packet to PC(BSU) via wifi by TDF report , need to add self identification info
 }
 */
+void prvTask( void *pvParams )
+{
+    uint8_t          pucMessage[] = "Help";
+    eEspConnection_t eConnectionStatus;
+    UNUSED( pvParams );
+
+    vEspWifiOn( false );
+
+    eEspTestAT();
+
+    for ( ;; ) {
+
+        eConnectionStatus = eGetConnectionStatus();
+
+        switch ( eConnectionStatus ) {
+            case WIFI_CONNECTED:
+                vLedsOn( LEDS_BLUE );
+                eEspSetClient( COMMAND_SET );
+                eEspSendData( COMMAND_SET, pucMessage, 1 );
+                break;
+            case WIFI_DISCONNECTED:
+                vLedsOn( LEDS_RED );
+                break;
+            default:
+                vLedsOn( LEDS_GREEN );
+        }
+
+        vTaskDelay( pdMS_TO_TICKS( 250 ) );
+        vLedsOff( LEDS_ALL );
+        vTaskDelay( pdMS_TO_TICKS( 250 ) );
+    }
+}
 /*-----------------------------------------------------------*/
 

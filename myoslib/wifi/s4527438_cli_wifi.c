@@ -20,8 +20,8 @@
 
 #include "FreeRTOS_CLI.h"
 
-#include "s4527438_os_wifi.h"
 #include "s4527438_lib_log.h"
+#include "esp_wifi.h"
 
 #include "memory_operations.h"
 /* Private typedef -----------------------------------------------------------*/
@@ -60,7 +60,6 @@ static BaseType_t prvWifiATCmdSendCommand(char *pcWriteBuffer, size_t xWriteBuff
     if( lParam_len == 0 ) {
         return returnedValue;
     }
-    s4527438_os_wifi_send_cmd(cCmd_string,lParam_len);
-
+    eEspSendRAWCommnd(cCmd_string,lParam_len);
     return returnedValue;
 }
