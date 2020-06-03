@@ -39,6 +39,8 @@
 #include "s4527438_cli_wifi.h"
 #include "s4527438_cli_ble.h"
 
+#include "unified_comms_bluetooth.h"
+
 /* Private Defines ------------------------------------------*/
 // clang-format off
 // clang-format on
@@ -47,6 +49,10 @@
 
 /* Function Declarations ------------------------------------*/
 void prvTask( void *pvParams );
+void vCustomBluetoothHandler( const uint8_t *pucAddress, eBluetoothAddressType_t eAddressType, 
+							int8_t cRssi, bool bConnectable, 
+							uint8_t *pucData, uint8_t ucDataLen );
+
 /* Private Variables ----------------------------------------*/
 EventGroupHandle_t   pxPushButtonState;
 STATIC_TASK_STRUCTURES( pxWifi, configMINIMAL_STACK_SIZE, tskIDLE_PRIORITY + 2 );
@@ -104,6 +110,10 @@ void vApplicationStartupCallback( void )
     s4527438_cli_wifi_init();
 
     STATIC_TASK_CREATE( pxWifi, prvTask, "WiFi", NULL );
+
+	/* Setup our Bluetooth receive handler */
+	vUnifiedCommsBluetoothCustomHandler(vCustomBluetoothHandler);
+	vUnifiedCommsListen(&xBluetoothComms, COMMS_LISTEN_ON_FOREVER);
 }
 
 void vApplicationTickCallback(uint32_t ulUptime) 
@@ -111,25 +121,35 @@ void vApplicationTickCallback(uint32_t ulUptime)
 	UNUSED(ulUptime);
 }
 
-/* TODO : Re-write BLE route call back to detect distance and forward to PC BSU via wifi */
-/*
-void vUnifiedCommsRouterAdapter( xCommsInterface_t *           pxComms,
-                               xUnifiedCommsIncomingRoute_t *pxCurrentRoute,
-                               xUnifiedCommsMessage_t *      pxMessage )
+void vCustomBluetoothHandler( const uint8_t *pucAddress, eBluetoothAddressType_t eAddressType, 
+							int8_t cRssi, bool bConnectable, 
+							uint8_t *pucData, uint8_t ucDataLen )
 {
-	// If distance_mm > SDL	, SDL_violation_count++
-	// if( SDL_violation_count >= 2 ) {
-		// Warn user
+	UNUSED(eAddressType);
+	UNUSED(bConnectable);
+
+	/* Limit printed devices based on RSSI */
+	if (cRssi < -60) {
+		return;
 	}
 
-	// Forward packet to PC(BSU) via wifi by TDF report , need to add self identification info
+    xLogBuilder_t logBuilder;
+    eLogBuilderStart( &logBuilder, LOG_APPLICATION );
+    eLogBuilderPush( &logBuilder, LOG_INFO, "%:6R %3d dBm = % *A\r\n", pucAddress, cRssi, ucDataLen, pucData );
+
+	//eLog(LOG_APPLICATION, LOG_INFO, "buffer = <%s>\r\n", logBuilder.pcString );
+
+    eLogBuilderFinish( &logBuilder );
+
+	//eLog(LOG_APPLICATION, LOG_INFO, "%:6R %3d dBm = % *A\r\n", pucAddress, cRssi, ucDataLen, pucData );
 }
-*/
+
 void prvTask( void *pvParams )
 {
     uint8_t          pucMessage[] = "Help";
     eEspConnection_t eConnectionStatus;
     UNUSED( pvParams );
+    UNUSED( pucMessage );
 
     vEspWifiOn( true );
 
@@ -142,8 +162,8 @@ void prvTask( void *pvParams )
         switch ( eConnectionStatus ) {
             case WIFI_CONNECTED:
                 vLedsOn( LEDS_BLUE );
-                eEspSetClient( COMMAND_SET );
-                eEspSendData( COMMAND_SET, pucMessage, 1 );
+                //eEspSetClient( COMMAND_SET );
+                //eEspSendData( COMMAND_SET, pucMessage, 1 );
                 break;
             case WIFI_DISCONNECTED:
                 eLog( LOG_APPLICATION, LOG_APOCALYPSE, "DISCONNECTED try to reconnect");
