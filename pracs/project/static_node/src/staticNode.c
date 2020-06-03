@@ -35,6 +35,8 @@
 #include "s4527438_cli_hci.h"
 #include "s4527438_cli_ble.h"
 
+#include "tdf.h"
+#include "rtc.h"
 /* Private Defines ------------------------------------------*/
 // clang-format off
 // clang-format on
@@ -99,9 +101,18 @@ void vApplicationStartupCallback( void )
 void vApplicationTickCallback(uint32_t ulUptime) 
 {
 	UNUSED(ulUptime);
+	xTdfTime_t xTime;
+    tdf_range_mm_t tdf_range_mm_obj = {0x00};
 
+    // range
     uint32_t distance_mm = s4527438_hal_ultraRanger_read_distance();
     s4527438_LOGGER(MY_OS_LIB_LOG_LEVEL_LOG,"[HCSR04 Event]: [%d]",distance_mm);
+
+    tdf_range_mm_obj.range = distance_mm; 
+
+	bRtcGetTdfTime( &xTime );
+	eTdfAddMulti(BLE_LOG, TDF_3D_POSE, TDF_TIMESTAMP_NONE, &xTime, &tdf_range_mm_obj);
+	eTdfFlushMulti(BLE_LOG);
 }
 
 /* TODO : Re-write BLE route call back to detect distance and forward to PC BSU via wifi */
