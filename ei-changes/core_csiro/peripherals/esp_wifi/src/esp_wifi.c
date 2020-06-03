@@ -126,7 +126,7 @@ xWifiNetwork_t xNetwork = {
 
 xWifiConnection_t xConnection = {
 	.pcProtocol  = "TCP", /**< TCP OR UDP OR SSL */
-	.pcConnectIP = "192.168.43.1",
+	.pcConnectIP = "192.168.43.69",
 	.pcPort		 = "333",
 };
 
@@ -316,13 +316,13 @@ eModuleError_t eEspSendData( eEspCommand_t eQueryType, uint8_t *pucData, uint8_t
 	xSemaphoreTake( xReadySendSemaphore, pdMS_TO_TICKS( 10000 ) );
 
     /* Send Data */
-	pucBuffer = (uint8_t *) xUartBackend.fnClaimBuffer( pxConfig->pxUart, &ulBufferLen);
-	configASSERT( pucBuffer != NULL );
-
     vBufferBuilderStart( &xBuilder, pucBuffer, ulBufferLen );
     vBufferBuilderPushData( &xBuilder, pucData, ucDataLen );
 
-	return eEspSendCommand( &xBuilder );
+	eEspSendCommand( &xBuilder );
+
+    xUartBackend.fnReleaseBuffer( pxConfig->pxUart, (char *)pucBuffer);
+	return ERROR_NONE;;
 }
 
 /*-----------------------------------------------------------*/
@@ -700,6 +700,7 @@ void vEspController( void *pvParameters )
 			switch ( eError ) {
 				case MSG_OK:
 					xSemaphoreGive( xReadySemaphore );
+					xSemaphoreGive( xReadySendSemaphore );
 					break;
 				case MSG_ERROR:
 					xSemaphoreGive( xReadySemaphore );
