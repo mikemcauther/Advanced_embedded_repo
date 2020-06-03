@@ -105,6 +105,7 @@ class SocketConnections():
         self.packet_group = self.ClientGroup(packet_port,packet_host)
         self.debug_group = self.ClientGroup(debug_port,packet_host)
         self.max_clients = 0
+        self._receive_len=128
 
     def socket_recv(self):
         #packets = []
@@ -118,21 +119,21 @@ class SocketConnections():
                 self.client_summary()
             # An existing client has had some event
             else:
-                # Try and read data from socket
+                # Try and read data from sock
                 try:
                     #packets.append(PacpTransportSocket.receive_from(sock))
-                    packet = socket.recv(receive_len)
+                    packet = sock.recv(self._receive_len)
                     if packet == b"":
                         raise ConnectionResetError
                     #msg = byte.decode('utf-8')
                     #print(msg)
                     data.extend(packet)
                 # Check for remote connections closing
-                except (ConnectionResetError, socket.timeout, socket.error):
+                except (ConnectionResetError, sock.timeout, sock.error):
                     if self.packet_group.close_socket(sock) or self.debug_group.close_socket(sock):
                         self.client_summary()
                     continue
-                # Extract packets from the socket stream
+                # Extract packets from the sock stream
         for sock in writable:
             print("Socket appeared in writeable list {:}".format(sock))
             if self.packet_group.close_socket(sock) or self.debug_group.close_socket(sock):
@@ -162,58 +163,6 @@ class SocketConnections():
         current_clients = self.packet_group.num_clients + self.debug_group.num_clients
         self.max_clients = max(self.max_clients, current_clients)
         print("Clients: now={:d}, max={:d}".format(current_clients, self.max_clients))
-
-class ListenClient:
-
-    def __init__(self, host="localhost", port=333,receive_len=128 ):
-        self.host = host
-        self.port = port
-        self.socket = None
-
-    def listen(self):
-        new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        new_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        new_socket.bind(('', self.port))
-        new_socket.listen()
-        self.socket = new_socket
-
-    def connect(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        try:
-            self.socket.settimeout(15)
-            self.socket.connect((self.host, self.port))
-        except (ConnectionRefusedError, socket.error) as err:
-            print("Cant connect to (%s,%s): %s" % (self.host, self.port , str(err)))
-            raise
-
-    def close(self):
-        try:
-            self.socket.shutdown(socket.SHUT_RDWR)
-            self.socket.close()
-        except (ConnectionRefusedError, socket.error):
-            pass
-    
-    def write(self, packet):
-        self.socket.sendall( bytes(packet) )
-
-    def read(self, timeout=None):
-        self.socket.settimeout(timeout)
-        self.receive_from(self.socket)
-        return packet
-
-    def receive_from(socket):
-        while True:
-            byte = socket.recv(receive_len)
-            if byte == b"":
-                raise ConnectionResetError
-            break
-            msg = data.decode('utf-8')
-        return msg
-
-    def __repr__(self):
-        return "{:s}:{:d}".format(self.host, self.port)
-
 
 if __name__ == '__main__':
     listener = ListenClient(port=9001)
