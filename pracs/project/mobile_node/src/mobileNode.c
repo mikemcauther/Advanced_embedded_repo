@@ -145,6 +145,9 @@ void vCustomBluetoothHandler( const uint8_t *pucAddress, eBluetoothAddressType_t
 	//eLog(LOG_APPLICATION, LOG_INFO, "buffer = <%s>\r\n", logBuilder.pcString );
     pvMemcpy(global_send_buffer,logBuilder.pcString,logBuilder.ulIndex);
     global_send_buffer_len = logBuilder.ulIndex;
+    global_send_buffer[global_send_buffer_len++] = '\r';
+    global_send_buffer[global_send_buffer_len++] = '\n';
+    global_send_buffer[global_send_buffer_len++] = '\0';
 
     eLogBuilderFinish( &logBuilder );
 
