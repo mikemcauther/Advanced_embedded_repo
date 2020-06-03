@@ -57,6 +57,8 @@ void vCustomBluetoothHandler( const uint8_t *pucAddress, eBluetoothAddressType_t
 EventGroupHandle_t   pxPushButtonState;
 STATIC_TASK_STRUCTURES( pxWifi, configMINIMAL_STACK_SIZE, tskIDLE_PRIORITY + 2 );
 
+static uint8_t global_send_buffer[512] = {0};
+static uint8_t global_send_buffer_len = 0;
 /*-----------------------------------------------------------*/
 
 void vApplicationSetLogLevels( void )
@@ -127,6 +129,8 @@ void vCustomBluetoothHandler( const uint8_t *pucAddress, eBluetoothAddressType_t
 {
 	UNUSED(eAddressType);
 	UNUSED(bConnectable);
+	UNUSED(pucData);
+	UNUSED(ucDataLen);
 
 	/* Limit printed devices based on RSSI */
 	if (cRssi < -60) {
@@ -135,9 +139,12 @@ void vCustomBluetoothHandler( const uint8_t *pucAddress, eBluetoothAddressType_t
 
     xLogBuilder_t logBuilder;
     eLogBuilderStart( &logBuilder, LOG_APPLICATION );
-    eLogBuilderPush( &logBuilder, LOG_INFO, "%:6R %3d dBm = % *A\r\n", pucAddress, cRssi, ucDataLen, pucData );
+    //eLogBuilderPush( &logBuilder, LOG_INFO, "%:6R,%3d,dBm = % *A\r\n", pucAddress, cRssi, ucDataLen, pucData );
+    eLogBuilderPush( &logBuilder, LOG_INFO, "%:6R,%3d", pucAddress, cRssi );
 
 	//eLog(LOG_APPLICATION, LOG_INFO, "buffer = <%s>\r\n", logBuilder.pcString );
+    pvMemcpy(global_send_buffer,logBuilder.pcString,logBuilder.ulIndex);
+    global_send_buffer_len = logBuilder.ulIndex;
 
     eLogBuilderFinish( &logBuilder );
 
@@ -162,8 +169,8 @@ void prvTask( void *pvParams )
         switch ( eConnectionStatus ) {
             case WIFI_CONNECTED:
                 vLedsOn( LEDS_BLUE );
-                //eEspSetClient( COMMAND_SET );
-                //eEspSendData( COMMAND_SET, pucMessage, 1 );
+                eEspSetClient( COMMAND_SET );
+                eEspSendData( COMMAND_SET, global_send_buffer, global_send_buffer_len );
                 break;
             case WIFI_DISCONNECTED:
                 eLog( LOG_APPLICATION, LOG_APOCALYPSE, "DISCONNECTED try to reconnect");

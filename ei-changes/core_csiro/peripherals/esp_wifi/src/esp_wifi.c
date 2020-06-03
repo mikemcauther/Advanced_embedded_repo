@@ -20,6 +20,7 @@
 #include "uart.h"
 #include "nrf_delay.h"
 #include "s4527438_lib_log.h"
+#include "tiny_printf.h"
 
 /* Private Defines ------------------------------------------*/
 // clang-format off
@@ -69,6 +70,7 @@ typedef enum eEspRecievedCommand_t {
 	MSG_GOT_IP		   = 0x07,
 	MSG_UNKNOWN		   = 0x08,
 	MSG_CONNECT_ERROR  = 0x09,
+	MSG_SEND_WAITING    = 0x0A,
 } eEspRecievedCommand_t;
 
 /* Function Declarations ------------------------------------*/
@@ -88,6 +90,8 @@ void vEspSerialByteHandler( char cRxByte );
 /* Handles messages recieved from the ESP to perform things like reconnecting */
 void vEspController( void *pvParameters );
 
+/* Formate Push Data */
+static eModuleError_t vBufferBuilderFormatePushData( xBufferBuilder_t *pxBuilder, const char *format, ... );
 /* Private Variables ----------------------------------------*/
 
 STATIC_TASK_STRUCTURES( xEspRecvTask, configMINIMAL_STACK_SIZE, tskIDLE_PRIORITY + 1 );
@@ -103,6 +107,7 @@ static xGpio_t xCts = UNUSED_GPIO;
 static QueueHandle_t	 pxCommandQueue;
 static SemaphoreHandle_t xCommsSemaphore;
 static SemaphoreHandle_t xReadySemaphore;
+static SemaphoreHandle_t xReadySendSemaphore;
 
 static uint8_t pucEspResponseCheck[RECV_MAX_RESPONSE];
 
@@ -121,8 +126,8 @@ xWifiNetwork_t xNetwork = {
 
 xWifiConnection_t xConnection = {
 	.pcProtocol  = "TCP", /**< TCP OR UDP OR SSL */
-	.pcConnectIP = "192.168.43.166",
-	.pcPort		 = "8080",
+	.pcConnectIP = "192.168.43.1",
+	.pcPort		 = "333",
 };
 
 /*-----------------------------------------------------------*/
@@ -157,6 +162,7 @@ void vEspInit( xEspAtInit_t *pxInit )
 
 	xCommsSemaphore = xSemaphoreCreateBinary();
 	xReadySemaphore = xSemaphoreCreateBinary();
+	xReadySendSemaphore = xSemaphoreCreateBinary();
 	pxCommandQueue  = xQueueCreate( 4, sizeof( xEspMessage_t ) );
 
 	configASSERT( pxCommandQueue );
@@ -264,6 +270,15 @@ eModuleError_t eEspSendRAWCommnd(uint8_t *cmd,uint8_t cmd_len)
 }
 /*-----------------------------------------------------------*/
 
+static eModuleError_t vBufferBuilderFormatePushData( xBufferBuilder_t *pxBuilder, const char *format, ... )
+{
+	va_list va;
+	va_start( va, format );
+	pxBuilder->ulIndex += tiny_vsnprintf( (char *) pxBuilder->pucBuffer + pxBuilder->ulIndex, pxBuilder->ulMaxLen - pxBuilder->ulIndex, format, va );
+	va_end( va );
+	return ERROR_NONE;
+}
+
 eModuleError_t eEspSendData( eEspCommand_t eQueryType, uint8_t *pucData, uint8_t ucDataLen )
 {
 	xBufferBuilder_t xBuilder;
@@ -271,8 +286,8 @@ eModuleError_t eEspSendData( eEspCommand_t eQueryType, uint8_t *pucData, uint8_t
 	uint8_t *		 pucBuffer;
 
 	/* Error currently returns command not valid for send command */
-	UNUSED( pucData );
-	UNUSED( ucDataLen );
+	//UNUSED( pucData );
+	//UNUSED( ucDataLen );
 
 	/* Construct the packet to send */
 	// pucBuffer = (uint8_t *) xUartBackend.fnClaimBuffer( pxConfig->pxUart, &ulBufferLen, portMAX_DELAY );
@@ -289,17 +304,29 @@ eModuleError_t eEspSendData( eEspCommand_t eQueryType, uint8_t *pucData, uint8_t
 			break;
 		case COMMAND_SET:
 
-			vBufferBuilderPushByte( &xBuilder, '=' );
-			vBufferBuilderPushByte( &xBuilder, '1' );
+            vBufferBuilderFormatePushData(&xBuilder, "=%d",ucDataLen );
+			//vBufferBuilderPushByte( &xBuilder, '=' );
+			//vBufferBuilderPushByte( &xBuilder, '1' );
 			break;
 		case COMMAND_EXECUTE:
 			break;
 	}
 
+	eEspSendCommand( &xBuilder );
+	xSemaphoreTake( xReadySendSemaphore, pdMS_TO_TICKS( 10000 ) );
+
+    /* Send Data */
+	pucBuffer = (uint8_t *) xUartBackend.fnClaimBuffer( pxConfig->pxUart, &ulBufferLen);
+	configASSERT( pucBuffer != NULL );
+
+    vBufferBuilderStart( &xBuilder, pucBuffer, ulBufferLen );
+    vBufferBuilderPushData( &xBuilder, pucData, ucDataLen );
+
 	return eEspSendCommand( &xBuilder );
 }
 
 /*-----------------------------------------------------------*/
+
 eModuleError_t eEspForceReconnect( eEspCommand_t eQueryType )
 {
 	xBufferBuilder_t xBuilder;
@@ -606,6 +633,11 @@ eEspRecievedCommand_t eEspCheckCommand( xEspMessage_t *pucEspMessage )
 		return MSG_CONNECT_ERROR;
 	}
 
+	/* Check for connection error received */
+	pvMemcpy( (char *) pucEspResponseCheck, RECV_SEND_WAITING, RECV_MAX_RESPONSE );
+	if ( bEspCompare( pucEspMessage, pucEspResponseCheck, 2 ) ) {
+		return MSG_SEND_WAITING;
+	}
 	return MSG_UNKNOWN;
 }
 
@@ -671,6 +703,7 @@ void vEspController( void *pvParameters )
 					break;
 				case MSG_ERROR:
 					xSemaphoreGive( xReadySemaphore );
+					xSemaphoreGive( xReadySendSemaphore );
 					break;
 				case MSG_BUSY:
 					break;
@@ -688,6 +721,9 @@ void vEspController( void *pvParameters )
 				case MSG_REMOTE_CONNECT:
 					bRemoteConnect = true;
 					break;
+                case MSG_SEND_WAITING:
+					xSemaphoreGive( xReadySendSemaphore );
+                    break;
 				case MSG_GOT_IP:
                     bIsConnecting  = false;
 					bConnected = true;
