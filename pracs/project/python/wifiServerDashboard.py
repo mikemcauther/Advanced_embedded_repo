@@ -13,6 +13,7 @@ import random
 from random import shuffle
 
 import SocketMonitor
+import numpy as np
 
 __author__ = "KO-CHEN-CHI & 491415063"
 
@@ -1242,7 +1243,6 @@ class GameApp(object) :
         
         self._canvas = tk.Canvas(master, bd=2, relief=tk.SUNKEN,width=self._canvas_x_max, height=self._canvas_y_max)
         self._master.grid_rowconfigure(0, weight=1)
-        self._canvas.bind('<Motion>', self.evt_motion)
 
         #Game Button
         self.big_circle_button = tk.Button(master,
@@ -1293,10 +1293,9 @@ class GameApp(object) :
 
         self.listInformation.grid(row = 3, column = 0,columnspan=2,  sticky="ew")
 
-        self.current_circle = None
+        self.current_node = MobileNode(self)
 
 
-        self._canvas.bind('<Button-1>', self.evt_click)
         # this will hold the position of the user's "first" click, in the form
         # of (x, y); if the user has not clicked, or clicks a second time, this
         # should be None
@@ -1306,6 +1305,7 @@ class GameApp(object) :
         self._lines = []
 
 
+        self.index_to_cor = {0:{"x":4,"y":5},1:{"x":0,"y":0},2:{"x":10,"y":0}}
         # Start Monitor Socket
         try:
             self._socket_monitor = SocketMonitor.SocketMonitor(self.listInformation)
@@ -1316,6 +1316,16 @@ class GameApp(object) :
 
         # Start mice
         self.mice = StickNode(self)
+
+    def get_cor_x(self,index):
+        if not index in self.index_to_cor:
+            return
+        return self.index_to_cor.get(index).get("x")
+
+    def get_cor_x(self,index):
+        if not index in self.index_to_cor:
+            return
+        return self.index_to_cor.get(index).get("y")
 
     def get_canvas(self):
         return self._canvas
@@ -1338,11 +1348,6 @@ class GameApp(object) :
     def get_current_radius(self):
         return self.circle_2_radius.get(self.selected_circle,30)
         
-    def evt_motion(self, event) :
-        if self.current_circle != None:
-            self._canvas.delete(self.current_circle)
-        self.current_circle = self.create_circle(event.x, event.y,self.get_current_radius())
-
     def create_circle(self, x, y, r):
         return self._canvas.create_oval(x-r, y-r, x+r, y+r, fill="blue", outline="#DDD", width=4)
         
@@ -1356,125 +1361,136 @@ class GameApp(object) :
         self._start = None
         self._lines = []
 
-    def create_win(self):
-        toplevel = Toplevel()
-        toplevel.title('WIN')
-        toplevel.geometry('1500x1000')
+    def on_new_RSSI_receive(self,mac,rssi_str):
+        self.current_node.updateRelativeData(mac,float(rssi_str))
 
-        # Create widges in the new window
-        self._win_window = GameWin(toplevel)
-
-        #time.sleep(5)
-        toplevel.focus_set()
-        #self._win_window.exit()
-        #self.exit()
-        
-    def evt_click(self, event) :
-        if self.mice.is_caught(event.x, event.y,self.get_current_radius()):
-            self.create_win()
-
-
-class StickNode(object):
+class NodeAbstract(object):
     def __init__(self, parent_manager) :
         self.parent_manager = parent_manager
         self.radius = 20
         self.x_cor = 0
         self.y_cor = 0
-
-        self.current_dir = "n"
-        self.current_show_or_hidden = "show"
-        
-        self.int_2_show_hidden_map = {0:"show",1:"hidden"}    
-        self.int_2_dir_map = {0:"n",1:"s",2:"w",3:"e"}
-
-        self.is_timer_stop = False
         self.mice_shape = None
-        self.start_timer()
+        self.mac = ""
+        self.color = "black"
 
     def get_canvas(self):
         return self.parent_manager.get_canvas()
-    
-    def is_caught(self,trp_x_cor,trap_y_cor,r):
-        if self.y_cor > (trap_y_cor + r):
-            return False
 
-        if self.y_cor < (trap_y_cor - r):
-            return False
-
-        if self.x_cor > (trp_x_cor + r):
-            return False
-
-        if self.x_cor < (trp_x_cor - r):
-            return False
-        
-        self.stop_timer()
-        return True
-    
-    def calculate_new_adjacent_position(self):
-        self.current_dir = self.int_2_dir_map.get(random.randint(0, 3),"n")
-        self.current_show_or_hidden = self.int_2_show_hidden_map.get(random.randint(0, 3),"show")
-
-        if self.current_dir == "n":
-            self.y_cor = self.y_cor + 500
-            if self.y_cor >= self.parent_manager.get_y_max():
-                self.y_cor = self.parent_manager.get_y_max()
-        elif self.current_dir == "s":
-            self.y_cor = self.y_cor - 500
-            if  self.y_cor <= 0:   
-                self.y_cor = 0
-        elif self.current_dir == "w":
-            self.x_cor = self.x_cor - 500
-            if  self.x_cor <= 0:   
-                self.x_cor = 0
-        elif self.current_dir == "e":
-            self.x_cor = self.x_cor + 500
-            if self.x_cor >= self.parent_manager.get_x_max():
-                self.x_cor = self.parent_manager.get_x_max()
-                
     def create_circle(self, x, y, r):
-        return self.get_canvas().create_oval(x-r, y-r, x+r, y+r, fill="green", outline="#DDD", width=4)
-    
-    def on_time_out(self):
-        """
-        Callbakc API to deal with the situation when a timer is up per 10 seconds.
+        return self.get_canvas().create_oval(x-r, y-r, x+r, y+r, fill=self.color, outline="#DDD", width=4)
 
-        Parameters:
-            None
-        Returns:
-            None
-        """
-        self.calculate_new_adjacent_position()
-
+    def redraw(self):
         if self.mice_shape != None:
             self.get_canvas().delete(self.mice_shape)
         self.mice_shape = self.create_circle(self.x_cor, self.y_cor, self.radius)
+
+    def get_x(self):
+        return self.x_cor
+    def get_y(self):
+        return self.y_cor
+
+class StickNode(NodeAbstract):
+    def __init__(self, parent_manager,pos_x,pos_y,rssi,distance,index,mac) :
+        super().__init__(parent_manager)
+        self.x_cor = pos_x
+        self.y_cor = pos_y
+        self.rssi = rssi
+        self.distance = distance
+        self.index = index
+        self.mac = mac
+        print("new node " + "index = " + str(self.index) + " mac = " + self.mac + " x_cor = " + str(self.x_cor) + " y_cor = " + str(self.y_cor))
+        self.redraw()
+        self.color = "red"
+
+class MobileNode(NodeAbstract):
+    def __init__(self, parent_manager) :
+        super().__init__(parent_manager)
+
+        self.cur_total_mac = 0
+        self.mac_to_stick_node = {}
+        self.index_to_stick_node = {}
+
+        self.RSSI_TO_DIS_C = -2.275354938271597
+        self.RSSI_TO_DIS_D = 2.612654320987652
+        self.PC_TO_REAL_LEN_FACTOR = 350
+        self.color = "green"
+
+    def calculate_RLS_Z(self,index_i,index_k):
+        index_k_obj = self.index_to_stick_node[index_k]
+        index_i_obj = self.index_to_stick_node[index_i]
+        result = np.power(index_i_obj.distance, 2) - np.power(index_k_obj.distance, 2) - np.power(index_i_obj.x_cor,2) - np.power(index_i_obj.y_cor,2) + np.power(index_k_obj.x_cor,2) + np.power(index_k_obj.y_cor,2)
+        return result
+
+    def calculate_RLS_Z_ARRAY(self):
+        Z01 = calculate_RLS_Z(0,1)
+        Z02 = calculate_RLS_Z(0,2)
+        Z12 = calculate_RLS_Z(1,2)
+        return np.array([Z01,Z02,Z12])
+
+    def calculate_RLS_X_COF(self,index_i,index_k):
+        index_k_obj = self.index_to_stick_node[index_k]
+        index_i_obj = self.index_to_stick_node[index_i]
+        result = 2 * (index_k_obj.x_cor - index_i_obj.x_cor)
+        return result
+
+    def calculate_RLS_Y_COF(self,index_i,index_k):
+        index_k_obj = self.index_to_stick_node[index_k]
+        index_i_obj = self.index_to_stick_node[index_i]
+        result = 2 * (index_k_obj.y_cor - index_i_obj.y_cor)
+        return result
+
+    def get_RLS_X_COV_ARRAY(self):
+        X01 = calculate_RLS_X_COF(0,1)
+        X02 = calculate_RLS_X_COF(0,2)
+        X12 = calculate_RLS_X_COF(1,2)
+        return np.array([X01,X02,X12])
+
+    def get_RLS_Y_COV_ARRAY(self):
+        Y01 = calculate_RLS_Y_COF(0,1)
+        Y02 = calculate_RLS_Y_COF(0,2)
+        Y12 = calculate_RLS_Y_COF(1,2)
+        return np.array([Y01,Y02,Y12])
+
+    def get_RLS_MATRIX(self):
+        X_COV_ARRAY = self.get_RLS_X_COV_ARRAY()
+        Y_COV_ARRAY = self.get_RLS_Y_COV_ARRAY()
+        A = np.vstack([X_COV_ARRAY,Y_COV_ARRAY]).T
+        return A
+
+    def update_position(self):
+        A = self.get_RLS_MATRIX()
+        Z = self.calculate_RLS_Z_ARRAY()
+        self.x_cor , self.y_cor = np.linalg.lstsq(A,Z)[0]
+        print("update position (x,y) = " + "(" + str(self.x_cor) + "," + str(self.y_cor) + ")")
+
+    def updateByRSSI(self,mac,rssi_float):
+
+        temp_value = (((-1)*self.RSSI_TO_DIS_C - (rssi_float + 7)/10)/self.RSSI_TO_DIS_D)
+        new_distance = np.power(10, temp_value)
         
-        if self.is_timer_stop == True:
-            return
-        Timer(1, self.on_time_out, ()).start()
+        if mac not in  self.mac_to_stick_node:
+            index = self.cur_total_mac
+
+            x_cor = self.parent_manager.get_cor_x(index)
+            y_cor = self.parent_manager.get_cor_y(index)
+            currentNode = StickNode(self.parent_manager,x_cor,y_cor,rssi_float,new_distance,index,mac) 
+            self.mac_to_stick_node[mac] =  currentNode
+            self.index_to_stick_node[mac] = currentNode
+
+            self.cur_total_mac = self.cur_total_mac + 1
+        else:
+            currentNode = self.mac_to_stick_node[mac] 
+
+        currentNode.rssi = rssi_float
+        currentNode.distance = new_distance
+
+        print("node " + str(currentNode.index) + " new_distance = " + str(currentNode.distance) + " mac = " + currentNode.mac)
         
-    def start_timer(self):
-        """
-        API to start a timer for updating GUI content related to time.
-
-        Parameters:
-            None
-        Returns:
-            None
-        """
-        self.is_timer_stop = False
-        Timer(1, self.on_time_out, ()).start()
-
-    def stop_timer(self):
-        """
-        API to stop a timer.
-
-        Parameters:
-            None
-        Returns:
-            None
-        """
-        self.is_timer_stop = True  
+    def callback_on_socket_update(self,mac,rssi):
+        self.updateByRSSI(mac,rssi)
+        self.update_position()
+        self.redraw()
 
 class GameWin(object) :
     """An application for drawing lines."""
