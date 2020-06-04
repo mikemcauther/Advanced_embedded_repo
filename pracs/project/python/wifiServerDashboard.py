@@ -1308,7 +1308,7 @@ class GameApp(object) :
 
         self.index_to_cor = {   0:{"x":10,"y":0},
                                 1:{"x":0,"y":0},
-                                2:{"x":4,"y":5}}
+                                2:{"x":6,"y":2}}
         # Start Monitor Socket
         try:
             self._socket_monitor = SocketMonitor.SocketMonitor(self.current_node,self.listInformation)
@@ -1370,6 +1370,8 @@ class NodeAbstract(object):
         self.mice_shape = None
         self.mac = ""
         self.color = "black"
+        self.PC_TO_REAL_LEN_FACTOR = 350
+        self.AUG_FACTOR = 100
 
     def get_canvas(self):
         return self.parent_manager.get_canvas()
@@ -1390,8 +1392,8 @@ class NodeAbstract(object):
 class StickNode(NodeAbstract):
     def __init__(self, parent_manager,pos_x,pos_y,rssi,distance,index,mac) :
         super().__init__(parent_manager)
-        self.x_cor = pos_x
-        self.y_cor = pos_y
+        self.x_cor = pos_x * self.AUG_FACTOR
+        self.y_cor = pos_y * self.AUG_FACTOR
         self.rssi = rssi
         self.distance = distance
         self.index = index
@@ -1410,7 +1412,6 @@ class MobileNode(NodeAbstract):
 
         self.RSSI_TO_DIS_C = -2.275354938271597
         self.RSSI_TO_DIS_D = 2.612654320987652
-        self.PC_TO_REAL_LEN_FACTOR = 350
         self.color = "green"
 
         self.mac_block_list = {"70:03:67:9A:8F:9B":1
@@ -1463,14 +1464,18 @@ class MobileNode(NodeAbstract):
         A = self.get_RLS_MATRIX()
         Z = self.calculate_RLS_Z_ARRAY()
         X_RLS , Y_RLS = np.linalg.lstsq(A,Z)[0]
-        self.x_cor = X_RLS / self.PC_TO_REAL_LEN_FACTOR
-        self.y_cor = Y_RLS / self.PC_TO_REAL_LEN_FACTOR
+        self.x_cor = X_RLS * self.AUG_FACTOR / self.PC_TO_REAL_LEN_FACTOR
+        self.y_cor = Y_RLS * self.AUG_FACTOR / self.PC_TO_REAL_LEN_FACTOR
         print("update position (x,y) = " + "(" + str(self.x_cor) + "," + str(self.y_cor) + ")")
 
     def updateByRSSI(self,mac,rssi_int):
-        if rssi_int < -50:
+        if rssi_int < -45 and self.cur_total_mac < 3:
             print(mac + " not achieve RSSI level(-50) , cur = " + str(rssi_int))
             return
+        if self.cur_total_mac == 3 and mac not in  self.mac_to_stick_node:
+            print("Too many node")
+            return 
+
 
         temp_value = (((-1)*self.RSSI_TO_DIS_C - (rssi_int + 7)/10)/self.RSSI_TO_DIS_D)
         new_distance = np.power(10, temp_value)
