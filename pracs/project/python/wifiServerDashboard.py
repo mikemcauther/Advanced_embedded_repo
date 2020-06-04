@@ -14,6 +14,7 @@ from random import shuffle
 
 import SocketMonitor
 import numpy as np
+import re
 
 __author__ = "KO-CHEN-CHI & 491415063"
 
@@ -1316,15 +1317,12 @@ class GameApp(object) :
 
         self._socket_monitor.SendMessage("EVENT_START","")
 
-        # Start mice
-        self.mice = StickNode(self)
-
     def get_cor_x(self,index):
         if not index in self.index_to_cor:
             return
         return self.index_to_cor.get(index).get("x")
 
-    def get_cor_x(self,index):
+    def get_cor_y(self,index):
         if not index in self.index_to_cor:
             return
         return self.index_to_cor.get(index).get("y")
@@ -1415,6 +1413,8 @@ class MobileNode(NodeAbstract):
         self.PC_TO_REAL_LEN_FACTOR = 350
         self.color = "green"
 
+        self.mac_block_list = {"70:03:67:9A:8F:9B":1
+                                }
     def calculate_RLS_Z(self,index_i,index_k):
         index_k_obj = self.index_to_stick_node[index_k]
         index_i_obj = self.index_to_stick_node[index_i]
@@ -1422,9 +1422,9 @@ class MobileNode(NodeAbstract):
         return result
 
     def calculate_RLS_Z_ARRAY(self):
-        Z01 = calculate_RLS_Z(0,1)
-        Z02 = calculate_RLS_Z(0,2)
-        Z12 = calculate_RLS_Z(1,2)
+        Z01 = self.calculate_RLS_Z(0,1)
+        Z02 = self.calculate_RLS_Z(0,2)
+        Z12 = self.calculate_RLS_Z(1,2)
         return np.array([Z01,Z02,Z12])
 
     def calculate_RLS_X_COF(self,index_i,index_k):
@@ -1440,15 +1440,15 @@ class MobileNode(NodeAbstract):
         return result
 
     def get_RLS_X_COV_ARRAY(self):
-        X01 = calculate_RLS_X_COF(0,1)
-        X02 = calculate_RLS_X_COF(0,2)
-        X12 = calculate_RLS_X_COF(1,2)
+        X01 = self.calculate_RLS_X_COF(0,1)
+        X02 = self.calculate_RLS_X_COF(0,2)
+        X12 = self.calculate_RLS_X_COF(1,2)
         return np.array([X01,X02,X12])
 
     def get_RLS_Y_COV_ARRAY(self):
-        Y01 = calculate_RLS_Y_COF(0,1)
-        Y02 = calculate_RLS_Y_COF(0,2)
-        Y12 = calculate_RLS_Y_COF(1,2)
+        Y01 = self.calculate_RLS_Y_COF(0,1)
+        Y02 = self.calculate_RLS_Y_COF(0,2)
+        Y12 = self.calculate_RLS_Y_COF(1,2)
         return np.array([Y01,Y02,Y12])
 
     def get_RLS_MATRIX(self):
@@ -1458,14 +1458,19 @@ class MobileNode(NodeAbstract):
         return A
 
     def update_position(self):
+        if self.cur_total_mac < 3:
+            return
         A = self.get_RLS_MATRIX()
         Z = self.calculate_RLS_Z_ARRAY()
         self.x_cor , self.y_cor = np.linalg.lstsq(A,Z)[0]
         print("update position (x,y) = " + "(" + str(self.x_cor) + "," + str(self.y_cor) + ")")
 
-    def updateByRSSI(self,mac,rssi_float):
+    def updateByRSSI(self,mac,rssi_int):
+        if rssi_int < -50:
+            print(mac + " not achieve RSSI level(-50) , cur = " + str(rssi_int))
+            return
 
-        temp_value = (((-1)*self.RSSI_TO_DIS_C - (rssi_float + 7)/10)/self.RSSI_TO_DIS_D)
+        temp_value = (((-1)*self.RSSI_TO_DIS_C - (rssi_int + 7)/10)/self.RSSI_TO_DIS_D)
         new_distance = np.power(10, temp_value)
         
         if mac not in  self.mac_to_stick_node:
@@ -1473,7 +1478,7 @@ class MobileNode(NodeAbstract):
 
             x_cor = self.parent_manager.get_cor_x(index)
             y_cor = self.parent_manager.get_cor_y(index)
-            currentNode = StickNode(self.parent_manager,x_cor,y_cor,rssi_float,new_distance,index,mac) 
+            currentNode = StickNode(self.parent_manager,x_cor,y_cor,rssi_int,new_distance,index,mac) 
             self.mac_to_stick_node[mac] =  currentNode
             self.index_to_stick_node[mac] = currentNode
 
@@ -1481,13 +1486,13 @@ class MobileNode(NodeAbstract):
         else:
             currentNode = self.mac_to_stick_node[mac] 
 
-        currentNode.rssi = rssi_float
+        currentNode.rssi = rssi_int
         currentNode.distance = new_distance
 
         print("node " + str(currentNode.index) + " new_distance = " + str(currentNode.distance) + " mac = " + currentNode.mac)
         
     def callback_on_socket_update(self,mac,rssi_str):
-        self.updateByRSSI(mac,float(rssi_str))
+        self.updateByRSSI(mac,int(rssi_str))
         self.update_position()
         self.redraw()
 
