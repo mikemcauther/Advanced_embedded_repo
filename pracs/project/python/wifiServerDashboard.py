@@ -1308,7 +1308,7 @@ class GameApp(object) :
 
         self.index_to_cor = {   0:{"x":10,"y":0},
                                 1:{"x":0,"y":0},
-                                2:{"x":6,"y":2}}
+                                2:{"x":6,"y":5}}
         # Start Monitor Socket
         try:
             self._socket_monitor = SocketMonitor.SocketMonitor(self.current_node,self.listInformation)
