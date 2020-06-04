@@ -1305,10 +1305,12 @@ class GameApp(object) :
         self._lines = []
 
 
-        self.index_to_cor = {0:{"x":4,"y":5},1:{"x":0,"y":0},2:{"x":10,"y":0}}
+        self.index_to_cor = {   0:{"x":4,"y":5},
+                                1:{"x":0,"y":0},
+                                2:{"x":10,"y":0}}
         # Start Monitor Socket
         try:
-            self._socket_monitor = SocketMonitor.SocketMonitor(self.listInformation)
+            self._socket_monitor = SocketMonitor.SocketMonitor(self.current_node,self.listInformation)
         except AttributeError:
             print("Socket Error")
 
@@ -1360,9 +1362,6 @@ class GameApp(object) :
         self._canvas.delete(tk.ALL)
         self._start = None
         self._lines = []
-
-    def on_new_RSSI_receive(self,mac,rssi_str):
-        self.current_node.updateRelativeData(mac,float(rssi_str))
 
 class NodeAbstract(object):
     def __init__(self, parent_manager) :
@@ -1487,8 +1486,8 @@ class MobileNode(NodeAbstract):
 
         print("node " + str(currentNode.index) + " new_distance = " + str(currentNode.distance) + " mac = " + currentNode.mac)
         
-    def callback_on_socket_update(self,mac,rssi):
-        self.updateByRSSI(mac,rssi)
+    def callback_on_socket_update(self,mac,rssi_str):
+        self.updateByRSSI(mac,float(rssi_str))
         self.update_position()
         self.redraw()
 
