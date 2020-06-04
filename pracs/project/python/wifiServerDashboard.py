@@ -1306,9 +1306,9 @@ class GameApp(object) :
         self._lines = []
 
 
-        self.index_to_cor = {   0:{"x":4,"y":5},
+        self.index_to_cor = {   0:{"x":10,"y":0},
                                 1:{"x":0,"y":0},
-                                2:{"x":10,"y":0}}
+                                2:{"x":4,"y":5}}
         # Start Monitor Socket
         try:
             self._socket_monitor = SocketMonitor.SocketMonitor(self.current_node,self.listInformation)
@@ -1462,7 +1462,9 @@ class MobileNode(NodeAbstract):
             return
         A = self.get_RLS_MATRIX()
         Z = self.calculate_RLS_Z_ARRAY()
-        self.x_cor , self.y_cor = np.linalg.lstsq(A,Z)[0]
+        X_RLS , Y_RLS = np.linalg.lstsq(A,Z)[0]
+        self.x_cor = X_RLS / self.PC_TO_REAL_LEN_FACTOR
+        self.y_cor = Y_RLS / self.PC_TO_REAL_LEN_FACTOR
         print("update position (x,y) = " + "(" + str(self.x_cor) + "," + str(self.y_cor) + ")")
 
     def updateByRSSI(self,mac,rssi_int):
@@ -1480,7 +1482,7 @@ class MobileNode(NodeAbstract):
             y_cor = self.parent_manager.get_cor_y(index)
             currentNode = StickNode(self.parent_manager,x_cor,y_cor,rssi_int,new_distance,index,mac) 
             self.mac_to_stick_node[mac] =  currentNode
-            self.index_to_stick_node[mac] = currentNode
+            self.index_to_stick_node[index] = currentNode
 
             self.cur_total_mac = self.cur_total_mac + 1
         else:
